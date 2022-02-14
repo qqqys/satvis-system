@@ -24,6 +24,7 @@ export default defineComponent({
         //terrainProvider: Cesium.createWorldTerrain()//地形
     });
     viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+    //test
     })
   }
 })
