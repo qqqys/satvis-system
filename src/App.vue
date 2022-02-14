@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div id="cesiumContainer" style="height: 100%;"></div>
+    <div id="cesiumContainer"></div>
   </div>
 </template>
 
