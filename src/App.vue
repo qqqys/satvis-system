@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div id="cesiumContainer"></div>
+    <div id="cesiumContainer" style="height: 100%;"></div>
   </div>
 </template>
 
@@ -24,14 +24,15 @@ export default defineComponent({
         //terrainProvider: Cesium.createWorldTerrain()//地形
     });
     viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+    viewer._cesiumWidget._creditContainer.style.display="none" //取消版权信息显示
     })
+    
+
+    
+
   }
 })
 </script>
 
 <style scoped>
-.container{
-  width: 100%;
-  height: 100%;
-}
 </style>
