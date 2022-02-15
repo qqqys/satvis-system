@@ -6,6 +6,14 @@ import cesium from 'vite-plugin-cesium'
 export default defineConfig({
   plugins: [vue(), cesium()],
   server:{
-    port: 8080
+    port: 8080,
+    proxy:{
+      '/api':{
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })
