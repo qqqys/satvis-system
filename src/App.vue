@@ -15,6 +15,7 @@ import { ElMessage } from 'element-plus';
 import changePos from './function/changePos';
 import createSat from './function/createSat';
 import WebSocket from './components/WebSocket.vue';
+import addTrack from './function/addTrack';
 export default defineComponent({
   components: {
     WebSocket
@@ -38,7 +39,7 @@ export default defineComponent({
       viewer._cesiumWidget._creditContainer.style.display="none" //取消版权信息显示
       window.viewer = viewer
       createSat(window.viewer, {"MessageType":"Add","UserName":"admin","TargetObject":"Sat11","TargetType":"3DModel","Model3DFile":"model/weixin.gltf","ModelIconFile":"model/weixin.png","ModelInfoString":"卫星11"})
-      createSat(window.viewer, {"MessageType":"Add","UserName":"admin","TargetObject":"Sat12","TargetType":"3DModel","Model3DFile":"model/weixin.gltf","ModelIconFile":"model/weixin.png","ModelInfoString":"卫星11"})
+      createSat(window.viewer, {"MessageType":"Add","UserName":"admin","TargetObject":"Sat12","TargetType":"3DModel","Model3DFile":"model/weixin.gltf","ModelIconFile":"model/weixin.png","ModelInfoString":"卫星12"})
     })
     
     //createSat(window.viewer, {"MessageType":"Add","UserName":"admin","TargetObject":"Sat11","TargetType":"3DModel","Model3DFile":"model/weixin.gltf","ModelIconFile":"model/weixin.png","ModelInfoString":"卫星11"})
@@ -52,7 +53,7 @@ export default defineComponent({
           changePos(window.viewer, ret)
         }
         else if(ret.TargetObject === 'Track'){
-
+          addTrack(window.viewer, ret)
         }
       }
     }
