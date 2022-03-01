@@ -1,19 +1,23 @@
 import * as Cesium from "cesium";
-const addFollow = function (viewer, beam, origin, target, beamdata) {
-    const entity = viewer.entities.getById(beam.TargetObject)
-    let originPosition = new Cesium.Cartesian3(
-        origin.Rx,
-        origin.Ry,
-        origin.Rz
-    )
-    let targetPosition = new Cesium.Cartesian3(
-        target.Rx,
-        target.Ry,
-        target.Rz
-    )
-    var d = Cesium.Cartesian3.distance(originPosition, targetPosition);
-    // entity.cylinder.length = beamdata.BeamLength
-    entity.cylinder.length = d
+const addFollow = function (viewer, beamId, ownerId, targetId) {
+    const entity = viewer.entities.getById(beamId)
+    const beamOwner = viewer.entities.getById(ownerId)
+    const beamTarget = viewer.entities.getById(targetId)
+    console.log(beamOwner);
+    console.log(beamTarget);
+    let beamOwnerPositon = beamOwner.position._value
+    let beamTargetPostion = beamTarget.position._value
+    
+
+    var d = Cesium.Cartesian3.distance(beamOwnerPositon, beamTargetPostion);
+
+    entity.cylinder = {
+        topRadius: 0,
+        bottomRadius: 500000,
+        length: d,
+        material: Cesium.Color.RED.withAlpha(0.7),
+    }
+
     let getModelMatrix = function (pointA, pointB) {
         //向量AB
         const vector2 = Cesium.Cartesian3.subtract(pointB, pointA, new Cesium.Cartesian3())
@@ -28,12 +32,11 @@ const addFollow = function (viewer, beam, origin, target, beamdata) {
         const hpr = Cesium.HeadingPitchRoll.fromQuaternion(orientation)
         return modelMatrix4
     }
-    let m = getModelMatrix(originPosition, targetPosition)
+    let m = getModelMatrix(beamOwnerPositon, beamTargetPostion)
     let hpr = Cesium.Transforms.fixedFrameToHeadingPitchRoll(m)
     hpr.pitch = hpr.pitch + 3.14 / 2
-    entity.orientation = Cesium.Transforms.headingPitchRollQuaternion(originPosition, hpr);
-    entity.position = Cesium.Cartesian3.midpoint(originPosition, targetPosition, new Cesium.Cartesian3())
-
+    entity.orientation = Cesium.Transforms.headingPitchRollQuaternion(beamOwnerPositon, hpr);
+    entity.position = Cesium.Cartesian3.midpoint(beamOwnerPositon, beamTargetPostion, new Cesium.Cartesian3())
 }
 
 export default addFollow

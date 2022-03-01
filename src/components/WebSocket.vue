@@ -32,7 +32,7 @@
              * 初始化ws
              */
             wsInit() {
-                const wsuri = 'ws://localhost:8888/websocket/admin'
+                const wsuri = 'ws://localhost:8889/websocket/admin'
                 this.ws = wsuri
                 if (!this.wsIsRun) return
                 // 销毁ws

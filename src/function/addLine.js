@@ -11,15 +11,27 @@ const addLine = function(viewer, line) {
             dashLength: 20, //短划线长度
         })
     }
-    viewer.entities.add({
-        id: line.TargetObject,
-        polyline: {
+    const entity =  viewer.entities.getById(line.TargetObject)
+    if(entity){
+        entity.polyline = {
             arcType: Cesium.ArcType.NONE,
             positions: [pos1, pos2],
             width: line.LineWidth,
             material: material,
-        },
-    });
+        }
+    }
+    else{
+        viewer.entities.add({
+            id: line.TargetObject,
+            polyline: {
+                arcType: Cesium.ArcType.NONE,
+                positions: [pos1, pos2],
+                width: line.LineWidth,
+                material: material,
+            },
+        });
+    }
+
 };
 
 export default addLine
