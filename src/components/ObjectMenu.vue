@@ -72,7 +72,7 @@ export default {
 
 .border_corner_left_top {
   top: -4px;
-  left: -4px;
+  left: -3px;
   border-right: none;
   border-bottom: none;
 }
@@ -86,7 +86,7 @@ export default {
 
 .border_corner_left_bottom {
   bottom: -4px;
-  left: -4px;
+  left: -3px;
   border-right: none;
   border-top: none;
 }
