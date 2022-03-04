@@ -7,10 +7,10 @@ const changePos = function(viewer, satellite) {
             satellite.Rz
         ),
         entity.orientation = new Cesium.Quaternion(
-            satellite.Q0,
             satellite.Q1,
             satellite.Q2,
-            satellite.Q3
+            satellite.Q3,
+            satellite.Q0
         )
 };
 
