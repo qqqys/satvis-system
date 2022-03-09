@@ -4,7 +4,7 @@ const createSat = function(viewer, satellite) {
         id: satellite.TargetObject,
         model:{
             uri: '/models/sat12/scene.gltf',
-            scale: 500
+            scale: 100
         }
     });
 };

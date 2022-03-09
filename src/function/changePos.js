@@ -1,6 +1,11 @@
 import * as Cesium from "cesium";
+import createSat from "./createSat";
 const changePos = function(viewer, satellite) {
     const entity = viewer.entities.getById(satellite.TargetObject);
+    if(entity == undefined){
+        createSat(viewer, satellite)
+        entity = viewer.entities.getById(satellite.TargetObject);
+    }
     entity.position = new Cesium.Cartesian3(
             satellite.Rx,
             satellite.Ry,
