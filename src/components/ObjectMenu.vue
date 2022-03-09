@@ -7,7 +7,7 @@
       <div class="border_corner border_corner_right_top"></div>
       <div class="border_corner border_corner_left_bottom"></div>
       <div class="border_corner border_corner_right_bottom"></div>
-      <div class="part border" style="text-align: center;">选择需要展示的卫星</div>
+      <div class="part border" style="text-align: center;">场景对象目录</div>
       <div class="satellite">
         <template v-for="entity in Entities" :key="entity.id">
           <div class="part border" style="text-indent: 1em;" @click="entity.show = !entity.show">
@@ -22,7 +22,7 @@
               class="part border"
               style="text-indent: 2em;"
             >
-              <label style="color: red;">{{ Beam }}</label>
+              <label :style="{color: Beam.color}">{{ Beam.id }}</label>
             </div>
           </template>
         </template>
@@ -33,8 +33,38 @@
 </template>
 
 <script>
+const Entities = [
+  {
+    id: "Sat11",
+    show: true,
+    Beam:[
+      {
+        id:"Beam11",
+        color:"red"
+      },
+      {
+        id:"Beam12",
+        color:"pink"
+      },
+      
+    ],
+  },
+    {
+    id: "Sat12",
+    show: false,
+    Beam:[
+      "Beam11",
+      "Beam12"
+    ],
+  }
+]
 export default {
-  props: ["Entities"],
+  // props: ["Entities"],
+  setup() {
+    return {
+      Entities
+    }
+  }
 };
 </script>
 
