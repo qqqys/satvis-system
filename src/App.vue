@@ -1,6 +1,9 @@
 <template>
   <div class="container">
-    <div id="cesiumContainer" >
+    <div
+      style="background-image: url(../src/assets/back.png); background-size: 100%;"
+      id="cesiumContainer"
+    >
       <test-header></test-header>
       <!-- <object-menu></object-menu> -->
       <web-socket @cmsg="fmsg"></web-socket>
@@ -27,7 +30,7 @@ import addLine from "./function/addLine";
 export default defineComponent({
   components: {
     WebSocket,
-    TestHeader
+    TestHeader,
   },
   setup() {
     onMounted(() => {
@@ -45,106 +48,202 @@ export default defineComponent({
         showRenderLoopErrors: true,
         fullscreenButton: true, //视察全屏按钮,
         //terrainProvider: Cesium.createWorldTerrain()//地形
-        animation:true,
-        timeline:true,
+        animation: true,
+        timeline: true,
+        orderIndependentTranslucency: false,
+        contextOptions: {
+          webgl: {
+            alpha: true,
+          },
+        },
         // imageryProvider:new Cesium.UrlTemplateImageryProvider({
-        // url : 'http://127.0.0.1:9191/map/{z}/{x}/{y}.png', 
-        // })   
-
+        // url : 'http://127.0.0.1:9191/map/{z}/{x}/{y}.png',
+        // })
       });
       viewer.scene.globe.enableLighting = false; //启用以太阳为光源的地球
       viewer._cesiumWidget._creditContainer.style.display = "none"; //取消版权信息显示
-      viewer.scene.debugShowFramesPerSecond = true
+      viewer.scene.debugShowFramesPerSecond = true;
+      viewer.scene.skyBox.show = false;
+      viewer.scene.backgroundColor = new Cesium.Color(0, 0, 0, 0);
 
       window.viewer = viewer;
 
+      let sat1 = {
+        MessageType: "Add",
+        UserName: "admin",
+        TargetObject: "Sat11",
+        TargetType: "3DModel",
+        Model3DFile: "model/weixin.gltf",
+        ModelIconFile: "model/weixin.png",
+        ModelInfoString: "卫星11",
+      };
+      let sat2 = {
+        MessageType: "Add",
+        UserName: "admin",
+        TargetObject: "Sat12",
+        TargetType: "3DModel",
+        Model3DFile: "model/weixin.gltf",
+        ModelIconFile: "model/weixin.png",
+        ModelInfoString: "卫星12",
+      };
 
-      new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas).setInputAction(function (movement) {
+      let beam1 = {
+        MessageType: "Add",
+        UserName: "admin",
+        TargetObject: "Beam11",
+        TargetType: "Beam",
+        BeamType: "follow",
+        BeamOwner: "Sat11",
+        BeamStyle: "Cone",
+        BeamAngle: 45.0,
+        Transparency: 0.7,
+        Color: "(255,0,0)",
+      };
+      let beam2 = {
+        MessageType: "Add",
+        UserName: "admin",
+        TargetObject: "Beam12",
+        TargetType: "Beam",
+        BeamType: "follow",
+        BeamOwner: "Sat12",
+        BeamStyle: "Cone",
+        BeamAngle: 45.0,
+        Transparency: 0.7,
+        Color: "(255,0,0)",
+      };
+
+      let pos1 = {
+        MessageType: "Modify",
+        UserName: "admin",
+        TargetObject: "Sat11",
+        TargetType: "3DModel",
+        Rx: -2572561.123207285,
+        Ry: 6486629.874361761,
+        Rz: 0.0,
+        Q0: 0.25269339688973574,
+        Q1: 0.6900551829752857,
+        Q2: -0.32263943016806307,
+        Q3: 0.5965514979598148,
+      };
+      let pos2 = {
+        MessageType: "Modify",
+        UserName: "admin",
+        TargetObject: "Sat12",
+        TargetType: "3DModel",
+        Rx: -524624.8844767694,
+        Ry: 3545383.3181513655,
+        Rz: 5987442.168201857,
+        Q0: 0.19937521545539486,
+        Q1: 0.8070889266217429,
+        Q2: -0.5268981449388109,
+        Q3: 0.17673520545357566,
+      };
+
+      createSat(window.viewer, sat1);
+      createSat(window.viewer, sat2);
+      changePos(window.viewer, pos1);
+      changePos(window.viewer, pos2);
+
+      createBeam(window.viewer, beam1);
+      createBeam(window.viewer, beam2);
+
+      let preid = "";
+      let GUI = null;
+
+      let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction(function (movement) {
         var pick = viewer.scene.pick(movement.position);
-        var id = pick.id._id
-        console.log(id)
-        var gui = new dat.GUI();
-        gui.domElement.style.position = "absolute";
-        gui.domElement.style.left = "0px";
-        gui.domElement.style.top = "100px";
+        console.log(pick);
+        if (pick === undefined) {
+          preid = "";
+            if (GUI) {
+              GUI.destroy();
+              GUI = null;
+            }
+        } else {
+          var id = pick.id._id;
+          if (id !== preid) {
+            if (GUI) GUI.destroy();
+            var gui = new dat.GUI();
+            if (id.slice(0, 4) === "Beam") {
+              GUI = gui;
+              preid = id;
+              gui.domElement.style.position = "absolute";
+              gui.domElement.style.left = "0px";
+              gui.domElement.style.top = "100px";
 
-        let value = viewer.entities.getById(id).cylinder.material
-          ._color._value;
-        console.log(value);
-        var prop = {
-          alpha: value.alpha,
-          red: value.red * 255,
-          blue: value.blue * 255,
-          green: value.green * 255,
-        };
-        gui
-          .add(prop, "alpha", 0, 1)
-          .step(0.05)
-          .onChange(function (val) {
-            {
-              let entity = viewer.entities.getById(id);
-              entity.cylinder.material = Cesium.Color.fromAlpha(
-                entity.cylinder.material._color._value,
-                val
-              );
+              let value =
+                viewer.entities.getById(id).cylinder.material._color._value;
+              var prop = {
+                alpha: value.alpha,
+                red: value.red * 255,
+                blue: value.blue * 255,
+                green: value.green * 255,
+              };
+              gui
+                .add(prop, "alpha", 0, 1)
+                .step(0.05)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.cylinder.material = Cesium.Color.fromAlpha(
+                      entity.cylinder.material._color._value,
+                      val
+                    );
+                  }
+                });
+              gui
+                .add(prop, "red", 0, 255)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.cylinder.material = Cesium.Color.fromCssColorString(
+                      "rgb(" + val + "," + prop.green + "," + prop.blue + ")"
+                    ).withAlpha(prop.alpha);
+                  }
+                });
+              gui
+                .add(prop, "green", 0, 255)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.cylinder.material = Cesium.Color.fromCssColorString(
+                      "rgb(" + prop.red + "," + val + "," + prop.blue + ")"
+                    ).withAlpha(prop.alpha);
+                  }
+                });
+              gui
+                .add(prop, "blue", 0, 255)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.cylinder.material = Cesium.Color.fromCssColorString(
+                      "rgb(" + prop.red + "," + prop.green + "," + val + ")"
+                    ).withAlpha(prop.alpha);
+                  }
+                });
             }
-          });
-        gui
-          .add(prop, "red", 0, 255)
-          .step(1)
-          .onChange(function (val) {
-            {
-              let entity = viewer.entities.getById(id);
-              entity.cylinder.material = Cesium.Color.fromCssColorString(
-                "rgb(" + val + "," + prop.green + "," + prop.blue + ")"
-              ).withAlpha(prop.alpha);
-            }
-          });
-        gui
-          .add(prop, "green", 0, 255)
-          .step(1)
-          .onChange(function (val) {
-            {
-              let entity = viewer.entities.getById(id);
-              entity.cylinder.material = Cesium.Color.fromCssColorString(
-                "rgb(" + prop.red + "," + val + "," + prop.blue + ")"
-              ).withAlpha(prop.alpha);
-            }
-          });
-        gui
-          .add(prop, "blue", 0, 255)
-          .step(1)
-          .onChange(function (val) {
-            {
-              let entity = viewer.entities.getById(id);
-              entity.cylinder.material = Cesium.Color.fromCssColorString(
-                "rgb(" + prop.red + "," + prop.green + "," + val + ")"
-              ).withAlpha(prop.alpha);
-            }
-        });
+          }
+        }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-
-
-
     });
 
-    const fmsg = (msg) =>{
-      console.log(msg)
-      let ret = JSON.parse(msg)
-      if(ret.MessageType === 'Modify'){
-        if(ret.TargetType === '3DModel'){
-          changePos(window.viewer, ret)
-        }
-        else if(ret.TargetType === 'Track'){
-          addTrack(window.viewer, ret)
-        }
-        else if(ret.TargetType === 'Beam'){
-          if(ret.TargetObject === 'Beam12'){
-            ret.BeamLength = ret.BeamLength - 6371000
+    const fmsg = (msg) => {
+      console.log(msg);
+      let ret = JSON.parse(msg);
+      if (ret.MessageType === "Modify") {
+        if (ret.TargetType === "3DModel") {
+          changePos(window.viewer, ret);
+        } else if (ret.TargetType === "Track") {
+          addTrack(window.viewer, ret);
+        } else if (ret.TargetType === "Beam") {
+          if (ret.TargetObject === "Beam12") {
+            ret.BeamLength = ret.BeamLength - 6371000;
           }
-          changeBeamDir(window.viewer, ret)
-
+          changeBeamDir(window.viewer, ret);
         }
       } else if (ret.MessageType === "Add") {
         if (ret.TargetType === "3DModel") {
