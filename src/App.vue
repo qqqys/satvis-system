@@ -1,7 +1,14 @@
 <template>
-  <div class="container">
+  <div
+    class="container"
+    style="background-image: url(../src/assets/back.png); background-size: 100%;"
+  >
     <div
-      style="background-image: url(../src/assets/back.png); background-size: 100%;"
+      id="ThreeContainer"
+      style="z-index: -1000;position:absolute;"
+    ></div>
+    <div
+      style="z-index: 1000;"
       id="cesiumContainer"
     >
       <test-header></test-header>
@@ -14,7 +21,8 @@
 <script>
 import * as Cesium from "cesium";
 import dat from "dat.gui";
-import { defineComponent, onMounted } from "@vue/runtime-core";
+import { defineComponent, onMounted, reactive } from "@vue/runtime-core";
+import CesiumMeshVisualizer from "cesiummeshvisualizer/Source/Main.js";
 import _ from "lodash";
 import changePos from "./function/changePos";
 import createSat from "./function/createSat";
@@ -26,6 +34,7 @@ import TestHeader from "./components/TestHeader.vue";
 import changeBeamDir from "./function/changeBeamDir";
 import addFollow from "./function/addFollow";
 import addLine from "./function/addLine";
+import * as THREE from "three";
 
 export default defineComponent({
   components: {
@@ -60,13 +69,18 @@ export default defineComponent({
         // url : 'http://127.0.0.1:9191/map/{z}/{x}/{y}.png',
         // })
       });
+
       viewer.scene.globe.enableLighting = false; //启用以太阳为光源的地球
       viewer._cesiumWidget._creditContainer.style.display = "none"; //取消版权信息显示
       viewer.scene.debugShowFramesPerSecond = true;
       viewer.scene.skyBox.show = false;
       viewer.scene.backgroundColor = new Cesium.Color(0, 0, 0, 0);
-
+      viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+      //开启地形深度测试
+      viewer.scene.globe.depthTestAgainstTerrain = true;
       window.viewer = viewer;
+      window.THREE = THREE;
+      console.log(CesiumMeshVisualizer);
 
       let sat1 = {
         MessageType: "Add",
@@ -147,8 +161,11 @@ export default defineComponent({
       createBeam(window.viewer, beam1);
       createBeam(window.viewer, beam2);
 
+      //**********************信息展示************************
+
       let preid = "";
-      let GUI = null;
+      let flexGUI = null;
+      let fixGUI = null;
 
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction(function (movement) {
@@ -156,30 +173,58 @@ export default defineComponent({
         console.log(pick);
         if (pick === undefined) {
           preid = "";
-            if (GUI) {
-              GUI.destroy();
-              GUI = null;
-            }
+          if (fixGUI) {
+            fixGUI.destroy();
+            fixGUI = null;
+          }
+          if (flexGUI) {
+            flexGUI.destroy();
+            flexGUI = null;
+          }
         } else {
           var id = pick.id._id;
           if (id !== preid) {
-            if (GUI) GUI.destroy();
-            var gui = new dat.GUI();
+            if (fixGUI) {
+              fixGUI.destroy();
+              fixGUI = null;
+            }
+            if (flexGUI) {
+              flexGUI.destroy();
+              flexGUI = null;
+            }
             if (id.slice(0, 4) === "Beam") {
-              GUI = gui;
+              var gui = new dat.GUI();
+              var fgui = new dat.GUI();
+              fixGUI = fgui;
+              flexGUI = gui;
               preid = id;
               gui.domElement.style.position = "absolute";
               gui.domElement.style.left = "0px";
               gui.domElement.style.top = "100px";
 
+              document.querySelector(
+                "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
+              ).style.display = "none";
+
+              document.querySelector(
+                "body > div.dg.ac > div:nth-child(2) > div.close-button.close-bottom"
+              ).style.display = "none";
+
+              fgui.domElement.style.position = "absolute";
+              fgui.domElement.style.left = "0px";
+              fgui.domElement.style.top = "250px";
               let value =
                 viewer.entities.getById(id).cylinder.material._color._value;
+              console.log(viewer.entities.getById(id).cylinder);
               var prop = {
                 alpha: value.alpha,
                 red: value.red * 255,
                 blue: value.blue * 255,
                 green: value.green * 255,
+                length:
+                  viewer.entities.getById(id).cylinder._length._value + "",
               };
+              let len = prop.length;
               gui
                 .add(prop, "alpha", 0, 1)
                 .step(0.05)
@@ -225,11 +270,66 @@ export default defineComponent({
                     ).withAlpha(prop.alpha);
                   }
                 });
+              fgui.add(prop, "length").onChange(function () {
+                {
+                  prop.length = len;
+                }
+              });
+            } else if (id.slice(0, 3) === "Sat") {
+              var gui = new dat.GUI();
+              flexGUI = gui;
+              preid = id;
+              gui.domElement.style.position = "absolute";
+              gui.domElement.style.left = "0px";
+              gui.domElement.style.top = "100px";
+
+              let value = viewer.entities.getById(id).position._value;
+              console.log(value);
+
+              var prop = {
+                "经度/°": Number(
+                  Cesium.Math.toDegrees(
+                    Cesium.Cartographic.fromCartesian(value).latitude
+                  ).toFixed(6)
+                ),
+                "纬度/°": Number(
+                  Cesium.Math.toDegrees(
+                    Cesium.Cartographic.fromCartesian(value).longitude
+                  ).toFixed(6)
+                ),
+                "高度/km": Number(
+                  Cesium.Math.toDegrees(
+                    Cesium.Cartographic.fromCartesian(value).height
+                  ).toFixed(6) / 1000
+                ),
+              };
+              gui.add(prop, "经度/°");
+              gui.add(prop, "纬度/°");
+              gui.add(prop, "高度/km");
+              let inputNode = document.getElementsByClassName("c");
+              for (let i of inputNode) {
+                i.firstChild.disabled = true;
+              }
+              document.querySelector(
+                "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
+              ).style.display = "none";
             }
+
+            let info = document.getElementsByClassName("cesium-infoBox")["0"];
+            console.log(info.firstChild.parentElement);
+            info.firstChild.parentElement.setAttribute(
+              "style",
+              "top: 110px;width:0"
+            );
+            // i[0].offsetTop = 110
           }
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     });
+
+    //******************************************************
+
+    //**********************报文************************
 
     const fmsg = (msg) => {
       console.log(msg);
@@ -256,6 +356,8 @@ export default defineComponent({
       }
     };
 
+    //**************************************************
+
     return {
       fmsg,
     };
@@ -264,4 +366,19 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.dg.main .close-button {
+  display: none;
+}
+
+#cesiumContainer,
+#threeContainer {
+  width: 100%;
+  height: 100%;
+}
+#threeContainer {
+  position: absolute;
+  z-index: 2;
+  top: 0%;
+  pointer-events: none;
+}
 </style>
