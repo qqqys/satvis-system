@@ -4,16 +4,12 @@
     style="background-image: url(../src/assets/back.png); background-size: 100%;"
   >
     <div
-      id="ThreeContainer"
-      style="z-index: -1000;position:absolute;"
-    ></div>
-    <div
       style="z-index: 1000;"
       id="cesiumContainer"
     >
-      <test-header></test-header>
+      <!-- <test-header></test-header> -->
       <!-- <object-menu></object-menu> -->
-      <web-socket @cmsg="fmsg"></web-socket>
+      <!-- <web-socket @cmsg="fmsg"></web-socket> -->
     </div>
   </div>
 </template>
@@ -22,7 +18,6 @@
 import * as Cesium from "cesium";
 import dat from "dat.gui";
 import { defineComponent, onMounted, reactive } from "@vue/runtime-core";
-import CesiumMeshVisualizer from "cesiummeshvisualizer/Source/Main.js";
 import _ from "lodash";
 import changePos from "./function/changePos";
 import createSat from "./function/createSat";
@@ -33,8 +28,7 @@ import changeCamera from "./function/changeCamera";
 import TestHeader from "./components/TestHeader.vue";
 import changeBeamDir from "./function/changeBeamDir";
 import addFollow from "./function/addFollow";
-import addLine from "./function/addLine";
-import * as THREE from "three";
+import addRegion from "./function/addRegion";
 
 export default defineComponent({
   components: {
@@ -75,12 +69,22 @@ export default defineComponent({
       viewer.scene.debugShowFramesPerSecond = true;
       viewer.scene.skyBox.show = false;
       viewer.scene.backgroundColor = new Cesium.Color(0, 0, 0, 0);
-      viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
-      //开启地形深度测试
       viewer.scene.globe.depthTestAgainstTerrain = true;
       window.viewer = viewer;
-      window.THREE = THREE;
-      console.log(CesiumMeshVisualizer);
+
+      function icrf(scene, time) {
+        if (scene.mode !== Cesium.SceneMode.SCENE3D) {
+          return;
+        }
+        let icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+        if (Cesium.defined(icrfToFixed)) {
+          let camera = viewer.camera;
+          let offset = Cesium.Cartesian3.clone(camera.position);
+          let transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+          camera.lookAtTransform(transform, offset);
+        }
+      }
+      viewer.scene.postUpdate.addEventListener(icrf);
 
       let sat1 = {
         MessageType: "Add",
@@ -153,6 +157,19 @@ export default defineComponent({
         Q3: 0.17673520545357566,
       };
 
+      let Region = {
+        MessageType: "Add",
+        UserName: "admin",
+        TargetObject: "RegionSpecial",
+        TargetType: "Region",
+        Color: "(0,128,255)",
+        TrackPoints: [
+          2014075.449, 5470994.897, 2578283.422, 733492.267, 3111826.929,
+          5500477.134, -739558.858, 3387437.955, 5335456.353, -2761450.073,
+          4029818.936, 4086932.165, -2915677.58, 5532538.106, 1248985.416,
+        ],
+      };
+
       createSat(window.viewer, sat1);
       createSat(window.viewer, sat2);
       changePos(window.viewer, pos1);
@@ -160,6 +177,7 @@ export default defineComponent({
 
       createBeam(window.viewer, beam1);
       createBeam(window.viewer, beam2);
+      addRegion(window.viewer,Region)
 
       //**********************信息展示************************
 
@@ -170,7 +188,6 @@ export default defineComponent({
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction(function (movement) {
         var pick = viewer.scene.pick(movement.position);
-        console.log(pick);
         if (pick === undefined) {
           preid = "";
           if (fixGUI) {
@@ -275,9 +292,11 @@ export default defineComponent({
                   prop.length = len;
                 }
               });
+              let inputNode = document.getElementsByClassName("c");
+              inputNode[4].firstChild.disabled = true;
             } else if (id.slice(0, 3) === "Sat") {
               var gui = new dat.GUI();
-              flexGUI = gui;
+              fixGUI = gui;
               preid = id;
               gui.domElement.style.position = "absolute";
               gui.domElement.style.left = "0px";
@@ -313,6 +332,71 @@ export default defineComponent({
               document.querySelector(
                 "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
               ).style.display = "none";
+            } else if (id.slice(0, 6) === "Region") {
+              var gui = new dat.GUI();
+              flexGUI = gui;
+              preid = id;
+              gui.domElement.style.position = "absolute";
+              gui.domElement.style.left = "0px";
+              gui.domElement.style.top = "100px";
+
+              document.querySelector(
+                "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
+              ).style.display = "none";
+
+              let value =
+                viewer.entities.getById(id).polygon.material._color._value;
+              var prop = {
+                alpha: value.alpha,
+                red: value.red * 255,
+                blue: value.blue * 255,
+                green: value.green * 255
+              };
+              gui
+                .add(prop, "alpha", 0, 1)
+                .step(0.05)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.polygon.material = Cesium.Color.fromAlpha(
+                      entity.polygon.material._color._value,
+                      val
+                    );
+                  }
+                });
+              gui
+                .add(prop, "red", 0, 255)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.polygon.material = Cesium.Color.fromCssColorString(
+                      "rgb(" + val + "," + prop.green + "," + prop.blue + ")"
+                    ).withAlpha(prop.alpha);
+                  }
+                });
+              gui
+                .add(prop, "green", 0, 255)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.polygon.material = Cesium.Color.fromCssColorString(
+                      "rgb(" + prop.red + "," + val + "," + prop.blue + ")"
+                    ).withAlpha(prop.alpha);
+                  }
+                });
+              gui
+                .add(prop, "blue", 0, 255)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id);
+                    entity.polygon.material = Cesium.Color.fromCssColorString(
+                      "rgb(" + prop.red + "," + prop.green + "," + val + ")"
+                    ).withAlpha(prop.alpha);
+                  }
+                });
             }
 
             let info = document.getElementsByClassName("cesium-infoBox")["0"];
@@ -321,13 +405,30 @@ export default defineComponent({
               "style",
               "top: 110px;width:0"
             );
-            // i[0].offsetTop = 110
           }
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     });
 
     //******************************************************
+
+    setTimeout(() => {
+      let imgUrl = "../src/assets/cloud.jpg";
+      let imgMaterial = new Cesium.ImageMaterialProperty({
+        image: imgUrl,
+        color: Cesium.Color.WHITE.withAlpha(0.2),
+      });
+
+      let i = viewer.entities.add({
+        id: "大气",
+        position: new Cesium.Cartesian3(0, 0, 0),
+        ellipsoid: {
+          radii: new Cesium.Cartesian3(6400000.0, 6400000.0, 6400000.0),
+          material: imgMaterial,
+        },
+      });
+    }, 500);
+
 
     //**********************报文************************
 
@@ -366,19 +467,4 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.dg.main .close-button {
-  display: none;
-}
-
-#cesiumContainer,
-#threeContainer {
-  width: 100%;
-  height: 100%;
-}
-#threeContainer {
-  position: absolute;
-  z-index: 2;
-  top: 0%;
-  pointer-events: none;
-}
 </style>
