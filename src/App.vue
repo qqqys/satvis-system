@@ -29,6 +29,7 @@ import TestHeader from "./components/TestHeader.vue";
 import changeBeamDir from "./function/changeBeamDir";
 import addFollow from "./function/addFollow";
 import addRegion from "./function/addRegion";
+import PolylineTrailLinkMaterialProperty from "./function/addstreamer";
 
 export default defineComponent({
   components: {
@@ -177,7 +178,103 @@ export default defineComponent({
 
       createBeam(window.viewer, beam1);
       createBeam(window.viewer, beam2);
-      addRegion(window.viewer,Region)
+      addRegion(window.viewer, Region);
+
+      //*************************下雨
+
+      //   const position = [];
+
+      // for (var i = 0; i < Region.TrackPoints.length; i += 3) {
+      //     position.push(Cesium.Cartesian3.fromElements(Region.TrackPoints[i], Region.TrackPoints[i + 1], Region.TrackPoints[i + 2]));
+      // }
+
+      //   viewer.entities.add({
+      //     name: Region.TargetObject,
+      //     id: Region.TargetObject,
+      //     polygon: {
+      //       hierarchy: new Cesium.PolygonHierarchy(position),
+      //       height: 50002,
+      //     },
+      //   });
+
+      //     let Rain =  `
+      //                 uniform sampler2D colorTexture;//输入的场景渲染照片
+      //                 varying vec2 v_textureCoordinates;
+      //                 uniform float vrain;
+
+      //                 float hash(float x){
+      //                     return fract(sin(x*133.3)*13.13);
+      //                 }
+
+      //                 void main(void){
+      //                     float time = czm_frameNumber / vrain;
+      //                     vec2 resolution = czm_viewport.zw;
+
+      //                     vec2 uv=(gl_FragCoord.xy*2.-resolution.xy)/min(resolution.x,resolution.y);
+      //                     vec3 c=vec3(.6,.7,.8);
+      //                     float a=0.4;
+      //                     float si=sin(a),co=cos(a);
+      //                     uv*=mat2(co,-si,si,co);
+      //                     uv*=length(uv+vec2(0,4.9))*.3+1.;
+
+      //                     float v=1.-sin(hash(floor(uv.x*100.))*2.);
+      //                     float b=clamp(abs(sin(20.*time*v+uv.y*(5./(2.+v))))-.95,0.,1.)*20.;
+
+      //                     c*=v*b; //屏幕上雨的颜色
+      //                     gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), vec4(c,1), 0.5); //将雨和三维场景融合
+      //                 }
+      //       `
+      //     let Snow = `
+      // uniform sampler2D colorTexture; //输入的场景渲染照片
+      // varying vec2 v_textureCoordinates;
+
+      // float snow(vec2 uv, float scale) {
+      //     float time = czm_frameNumber / 60.0;
+      //     float w = smoothstep(1., 0., -uv.y * (scale / 10.));
+      //     if (w < .1)
+      //         return 0.;
+      //     uv += time / scale;
+      //     uv.y += time * 2. / scale;
+      //     uv.x += sin(uv.y + time * .5) / scale;
+      //     uv *= scale;
+      //     vec2 s = floor(uv), f = fract(uv), p;
+      //     float k = 3., d;
+      //     p = .5 + .35 * sin(11. * fract(sin((s + p + scale) * mat2(7, 3, 6, 5)) * 5.)) - f;
+      //     d = length(p);
+      //     k = min(d, k);
+      //     k = smoothstep(0., k, sin(f.x + f.y) * 0.01);
+      //     return k * w;
+      // }
+
+      // void main(void) {
+      //     vec2 resolution = czm_viewport.zw;
+      //     vec2 uv = (gl_FragCoord.xy * 2. - resolution.xy) / min(resolution.x, resolution.y);
+      //     vec3 finalColor = vec3(0);
+      //     // float c=smoothstep(1.,0.3,clamp(uv.y*.3+.8,0.,.75));
+      //     float c = 0.0;
+      //     c += snow(uv, 30.) * .0;
+      //     c += snow(uv, 20.) * .0;
+      //     c += snow(uv, 15.) * .0;
+      //     c += snow(uv, 10.);
+      //     c += snow(uv, 8.);
+      //     c += snow(uv, 6.);
+      //     c += snow(uv, 5.);
+      //     finalColor = (vec3(c));                                                                      //屏幕上雪的颜色
+      //     gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), vec4(finalColor, 1), 0.5); //将雪和三维场景融合
+      // }
+      // `
+      // viewer.shadowMap.darkness = 0.9; //阴影强度
+      // let collection = viewer.scene.postProcessStages;
+      // let snow = new Cesium.PostProcessStage({
+      //   name: "czm_rain",
+      //   fragmentShader:Snow,
+      //   uniforms: {
+      //     vrain: function () {
+      //       return 30; //value:时间
+      //     },
+      //   },
+      // });
+      // collection.add(snow);
 
       //**********************信息展示************************
 
@@ -188,7 +285,8 @@ export default defineComponent({
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction(function (movement) {
         var pick = viewer.scene.pick(movement.position);
-        if (pick === undefined) {
+        console.log(pick);
+        if (pick === undefined || pick.id._id === "大气") {
           preid = "";
           if (fixGUI) {
             fixGUI.destroy();
@@ -242,12 +340,12 @@ export default defineComponent({
                   viewer.entities.getById(id).cylinder._length._value + "",
               };
               let len = prop.length;
+              let entity = viewer.entities.getById(id);
               gui
                 .add(prop, "alpha", 0, 1)
                 .step(0.05)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
                     entity.cylinder.material = Cesium.Color.fromAlpha(
                       entity.cylinder.material._color._value,
                       val
@@ -259,7 +357,6 @@ export default defineComponent({
                 .step(1)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
                     entity.cylinder.material = Cesium.Color.fromCssColorString(
                       "rgb(" + val + "," + prop.green + "," + prop.blue + ")"
                     ).withAlpha(prop.alpha);
@@ -270,7 +367,6 @@ export default defineComponent({
                 .step(1)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
                     entity.cylinder.material = Cesium.Color.fromCssColorString(
                       "rgb(" + prop.red + "," + val + "," + prop.blue + ")"
                     ).withAlpha(prop.alpha);
@@ -350,14 +446,15 @@ export default defineComponent({
                 alpha: value.alpha,
                 red: value.red * 255,
                 blue: value.blue * 255,
-                green: value.green * 255
+                green: value.green * 255,
               };
+              let entity = viewer.entities.getById(id);
+              let streamer = viewer.entities.getById(id + "streamer");
               gui
                 .add(prop, "alpha", 0, 1)
                 .step(0.05)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
                     entity.polygon.material = Cesium.Color.fromAlpha(
                       entity.polygon.material._color._value,
                       val
@@ -369,10 +466,16 @@ export default defineComponent({
                 .step(1)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
+                    let color =
+                      "rgb(" + val + "," + prop.green + "," + prop.blue + ")";
                     entity.polygon.material = Cesium.Color.fromCssColorString(
-                      "rgb(" + val + "," + prop.green + "," + prop.blue + ")"
+                      color
                     ).withAlpha(prop.alpha);
+                    streamer.wall.material =
+                      new PolylineTrailLinkMaterialProperty(
+                        Cesium.Color.fromCssColorString(color),
+                        1500
+                      );
                   }
                 });
               gui
@@ -380,10 +483,16 @@ export default defineComponent({
                 .step(1)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
+                    let color =
+                      "rgb(" + prop.red + "," + val + "," + prop.blue + ")";
                     entity.polygon.material = Cesium.Color.fromCssColorString(
-                      "rgb(" + prop.red + "," + val + "," + prop.blue + ")"
+                      color
                     ).withAlpha(prop.alpha);
+                    streamer.wall.material =
+                      new PolylineTrailLinkMaterialProperty(
+                        Cesium.Color.fromCssColorString(color),
+                        1500
+                      );
                   }
                 });
               gui
@@ -391,10 +500,16 @@ export default defineComponent({
                 .step(1)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
+                    let color =
+                      "rgb(" + prop.red + "," + prop.green + "," + val + ")";
                     entity.polygon.material = Cesium.Color.fromCssColorString(
-                      "rgb(" + prop.red + "," + prop.green + "," + val + ")"
+                      color
                     ).withAlpha(prop.alpha);
+                    streamer.wall.material =
+                      new PolylineTrailLinkMaterialProperty(
+                        Cesium.Color.fromCssColorString(color),
+                        1500
+                      );
                   }
                 });
             }
@@ -429,7 +544,6 @@ export default defineComponent({
       });
     }, 500);
 
-
     //**********************报文************************
 
     const fmsg = (msg) => {
@@ -457,7 +571,10 @@ export default defineComponent({
       }
     };
 
-    //**************************************************
+    //********************************************************
+
+    //******************************************************************
+    //**************************************************************** */
 
     return {
       fmsg,
