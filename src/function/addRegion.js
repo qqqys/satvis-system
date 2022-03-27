@@ -2,6 +2,7 @@ import * as Cesium from "cesium";
 import PolylineTrailLinkMaterialProperty from './addstreamer'
 
 
+
 const addRegion = function(viewer, Region) {
     const position = [];
 
@@ -14,8 +15,10 @@ const addRegion = function(viewer, Region) {
         id: Region.TargetObject,
         polygon: {
             hierarchy: new Cesium.PolygonHierarchy(position),
-            material: Cesium.Color.fromCssColorString("rgb" + Region.Color).withAlpha(0.7),
-            height: 50000
+            material: Cesium.Color.fromCssColorString("rgb" + Region.Color).withAlpha(0.3),
+            height: 50000,
+            outlineWidth: 1000000,
+            outlineColor: Cesium.Color.WHITE
         },
     });
 

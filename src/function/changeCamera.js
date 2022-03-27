@@ -1,7 +1,6 @@
 import * as Cesium from "cesium";
 const changeCamera = function (viewer, camera) {
     let entity = viewer.entities.getById(camera.TargetObject)
-    console.log(entity);
     if(entity === undefined){
         viewer.camera.flyHome()
     }

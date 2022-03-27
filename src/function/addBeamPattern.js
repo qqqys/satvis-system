@@ -25,11 +25,12 @@ const addBeamPattern = function (viewer, BeamPattern) {
             polygon: {
                 hierarchy: new Cesium.PolygonHierarchy([
                     satellite_pos, 
-                    Cesium.Cartesian3.fromDegrees( data_s[0], data_s[0], 0),
-                    Cesium.Cartesian3.fromDegrees( data_e[1], data_e[1], 0),
+                    Cesium.Cartesian3.fromDegrees( Number(data_s[0]),  Number(data_s[1]), 0),
+                    Cesium.Cartesian3.fromDegrees(  Number(data_e[0]) ,  Number(data_e[1]), 0),
                 ]),
-                material:Cesium.Color.fromCssColorString("rgb(155,0,0)"),
-                perPositionHeight:true
+                material:Cesium.Color.fromCssColorString("rgb(155,0,0)").withAlpha(0.6),
+                perPositionHeight:true,
+                
             },
         });
     }

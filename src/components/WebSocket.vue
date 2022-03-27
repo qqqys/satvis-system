@@ -32,7 +32,7 @@
              * 初始化ws
              */
             wsInit() {
-                const wsuri = 'ws://localhost:8889/websocket/admin'
+                const wsuri = 'ws://localhost:8888/websocket/admin'
                 this.ws = wsuri
                 if (!this.wsIsRun) return
                 // 销毁ws
@@ -55,12 +55,14 @@
                         clearInterval(this.wsTimer)
                     } else {
                         console.log('ws建立连接失败')
+                        //this.$emit('changeState', readyState)
                         this.wsInit()
                     }
                 }, 3000)
             },
             wsOpenHanler(event) {
                 console.log('ws建立连接成功')
+                this.$emit('cchangeState', 1)
             },
             wsMessageHanler(e) {
                 this.$emit('cmsg', e.data)
@@ -70,6 +72,7 @@
              */
             wsErrorHanler(event) {
                 console.log(event, '通信发生错误')
+                this.$emit('cchangeState', 2)
                 this.wsInit()
             },
             /**
@@ -77,6 +80,7 @@
              */
             wsCloseHanler(event) {
                 console.log(event, 'ws关闭')
+                this.$emit('cchangeState', 0)
                 this.wsInit()
             },
             /**
