@@ -1,12 +1,6 @@
 <template>
-  <div
-    class="container"
-    style="background-image: url(../src/assets/back.png); background-size: 100%;"
-  >
-    <div
-      style="z-index: 1000;"
-      id="cesiumContainer"
-    >
+  <div class="container" style="background-image: url(../src/assets/back.jpg); background-size: 100%;">
+    <div style="z-index: 1000;" id="cesiumContainer">
       <!-- <test-header></test-header> -->
       <!-- <object-menu></object-menu> -->
       <!-- <web-socket @cmsg="fmsg"></web-socket> -->
@@ -15,21 +9,21 @@
 </template>
 
 <script>
-import * as Cesium from "cesium";
-import dat from "dat.gui";
-import { defineComponent, onMounted, reactive } from "@vue/runtime-core";
-import _ from "lodash";
-import changePos from "./function/changePos";
-import createSat from "./function/createSat";
-import WebSocket from "./components/WebSocket.vue";
-import addTrack from "./function/addTrack";
-import createBeam from "./function/createBeam";
-import changeCamera from "./function/changeCamera";
-import TestHeader from "./components/TestHeader.vue";
-import changeBeamDir from "./function/changeBeamDir";
-import addFollow from "./function/addFollow";
-import addRegion from "./function/addRegion";
-import PolylineTrailLinkMaterialProperty from "./function/addstreamer";
+import * as Cesium from 'cesium'
+import dat from 'dat.gui'
+import { defineComponent, onMounted, reactive } from '@vue/runtime-core'
+import _ from 'lodash'
+import changePos from './function/changePos'
+import createSat from './function/createSatellite'
+import WebSocket from './components/WebSocket.vue'
+import addTrack from './function/addTrack'
+import createBeam from './function/createBeam'
+import changeCamera from './function/changeCamera'
+import TestHeader from './components/TestHeader.vue'
+import changeBeamDir from './function/changeBeamDir'
+import addFollow from './function/addFollow'
+import addRegion from './function/addRegion'
+import PolylineTrailLinkMaterialProperty from './function/addstreamer'
 
 export default defineComponent({
   components: {
@@ -39,8 +33,8 @@ export default defineComponent({
   setup() {
     onMounted(() => {
       Cesium.Ion.defaultAccessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMTdmMTdmNS00NzZhLTQwOGMtODQwYy1kZjAyMzNiOTg0ZTYiLCJpZCI6MzMwMjQsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTc4OTE3ODl9.yqF540oYBpSme38SIPKUP4t14FA6hXCLFHnvOqPf_Fw";
-      let viewer = new Cesium.Viewer("cesiumContainer", {
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMTdmMTdmNS00NzZhLTQwOGMtODQwYy1kZjAyMzNiOTg0ZTYiLCJpZCI6MzMwMjQsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTc4OTE3ODl9.yqF540oYBpSme38SIPKUP4t14FA6hXCLFHnvOqPf_Fw'
+      let viewer = new Cesium.Viewer('cesiumContainer', {
         geocoder: false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
         homeButton: true, //首页位置，点击之后将视图跳转到默认视角。
         sceneModePicker: true, //切换2D、3D 和 Columbus View (CV) 模式。
@@ -63,123 +57,151 @@ export default defineComponent({
         // imageryProvider:new Cesium.UrlTemplateImageryProvider({
         // url : 'http://127.0.0.1:9191/map/{z}/{x}/{y}.png',
         // })
-      });
+      })
 
-      viewer.scene.globe.enableLighting = false; //启用以太阳为光源的地球
-      viewer._cesiumWidget._creditContainer.style.display = "none"; //取消版权信息显示
-      viewer.scene.debugShowFramesPerSecond = true;
-      viewer.scene.skyBox.show = false;
-      viewer.scene.backgroundColor = new Cesium.Color(0, 0, 0, 0);
-      viewer.scene.globe.depthTestAgainstTerrain = true;
-      window.viewer = viewer;
+      viewer.scene.globe.enableLighting = false //启用以太阳为光源的地球
+      viewer._cesiumWidget._creditContainer.style.display = 'none' //取消版权信息显示
+      viewer.scene.debugShowFramesPerSecond = true
+      viewer.scene.skyBox.show = false
+      viewer.scene.backgroundColor = new Cesium.Color(0, 0, 0, 0)
+      viewer.scene.globe.depthTestAgainstTerrain = true
+      window.viewer = viewer
 
       function icrf(scene, time) {
         if (scene.mode !== Cesium.SceneMode.SCENE3D) {
-          return;
+          return
         }
-        let icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+        let icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time)
         if (Cesium.defined(icrfToFixed)) {
-          let camera = viewer.camera;
-          let offset = Cesium.Cartesian3.clone(camera.position);
-          let transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
-          camera.lookAtTransform(transform, offset);
+          let camera = viewer.camera
+          let offset = Cesium.Cartesian3.clone(camera.position)
+          let transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed)
+          camera.lookAtTransform(transform, offset)
         }
       }
-      viewer.scene.postUpdate.addEventListener(icrf);
+      viewer.scene.postUpdate.addEventListener(icrf)
 
       let sat1 = {
-        MessageType: "Add",
-        UserName: "admin",
-        TargetObject: "Sat11",
-        TargetType: "3DModel",
-        Model3DFile: "model/weixin.gltf",
-        ModelIconFile: "model/weixin.png",
-        ModelInfoString: "卫星11",
-      };
+        MessageType: 'Add',
+        UserName: 'admin',
+        TargetObject: 'Sat11',
+        TargetType: '3DModel',
+        Model3DFile: 'model/weixin.gltf',
+        ModelIconFile: 'model/weixin.png',
+        ModelInfoString: '卫星11',
+      }
       let sat2 = {
-        MessageType: "Add",
-        UserName: "admin",
-        TargetObject: "Sat12",
-        TargetType: "3DModel",
-        Model3DFile: "model/weixin.gltf",
-        ModelIconFile: "model/weixin.png",
-        ModelInfoString: "卫星12",
-      };
+        MessageType: 'Add',
+        UserName: 'admin',
+        TargetObject: 'Sat12',
+        TargetType: '3DModel',
+        Model3DFile: 'model/weixin.gltf',
+        ModelIconFile: 'model/weixin.png',
+        ModelInfoString: '卫星12',
+      }
 
       let beam1 = {
-        MessageType: "Add",
-        UserName: "admin",
-        TargetObject: "Beam11",
-        TargetType: "Beam",
-        BeamType: "follow",
-        BeamOwner: "Sat11",
-        BeamStyle: "Cone",
+        MessageType: 'Add',
+        UserName: 'admin',
+        TargetObject: 'Beam11',
+        TargetType: 'Beam',
+        BeamType: 'follow',
+        BeamOwner: 'Sat11',
+        BeamStyle: 'Cone',
         BeamAngle: 45.0,
         Transparency: 0.7,
-        Color: "(255,0,0)",
-      };
+        Color: '(255,0,0)',
+      }
       let beam2 = {
-        MessageType: "Add",
-        UserName: "admin",
-        TargetObject: "Beam12",
-        TargetType: "Beam",
-        BeamType: "follow",
-        BeamOwner: "Sat12",
-        BeamStyle: "Cone",
+        MessageType: 'Add',
+        UserName: 'admin',
+        TargetObject: 'Beam12',
+        TargetType: 'Beam',
+        BeamType: 'follow',
+        BeamOwner: 'Sat12',
+        BeamStyle: 'Cone',
         BeamAngle: 45.0,
         Transparency: 0.7,
-        Color: "(255,0,0)",
-      };
+        Color: '(255,0,0)',
+      }
 
       let pos1 = {
-        MessageType: "Modify",
-        UserName: "admin",
-        TargetObject: "Sat11",
-        TargetType: "3DModel",
-        Rx: -2572561.123207285,
-        Ry: 6486629.874361761,
-        Rz: 0.0,
-        Q0: 0.25269339688973574,
-        Q1: 0.6900551829752857,
-        Q2: -0.32263943016806307,
-        Q3: 0.5965514979598148,
-      };
+        MessageType: 'Modify',
+        UserName: 'admin',
+        TargetObject: 'Sat11',
+        TargetType: '3DModel',
+        Rx: -8114193.097953206,
+        Ry: 28014869.522684038,
+        Rz: 3418.4962867393365,
+        Q0: 0.09003470616684159,
+        Q1: -0.11613209224078529,
+        Q2: 0.562332591581207,
+        Q3: -0.813750050865001,
+      }
+
       let pos2 = {
-        MessageType: "Modify",
-        UserName: "admin",
-        TargetObject: "Sat12",
-        TargetType: "3DModel",
-        Rx: -524624.8844767694,
-        Ry: 3545383.3181513655,
-        Rz: 5987442.168201857,
-        Q0: 0.19937521545539486,
-        Q1: 0.8070889266217429,
-        Q2: -0.5268981449388109,
-        Q3: 0.17673520545357566,
-      };
+        MessageType: 'Modify',
+        UserName: 'admin',
+        TargetObject: 'Sat12',
+        TargetType: '3DModel',
+        Rx: 998677.174102344,
+        Ry: -6168785.282645439,
+        Rz: 10438754.127219586,
+        Q0: 0.1782164783424022,
+        Q1: -0.5218734162375451,
+        Q2: -0.8103400285781025,
+        Q3: -0.1980809489976914,
+      }
+      let beam1Pos = {
+        MessageType: 'Modify',
+        UserName: 'admin',
+        TargetObject: 'Beam11',
+        TargetType: 'Beam',
+        BeamOwner: 'Sat11',
+        BeamAngle: 5.0,
+        Q0: 0.06850075048694769,
+        Q1: -0.13000214746494262,
+        Q2: 0.6950957093700982,
+        Q3: -0.7037393293347388,
+        BeamLength: 29166300.000000004,
+      }
+      let beam2Pos = {
+        MessageType: 'Modify',
+        UserName: 'admin',
+        TargetObject: 'Beam12',
+        TargetType: 'Beam',
+        BeamOwner: 'Sat12',
+        BeamAngle: 15.0,
+        Q0: 0.1782164783424022,
+        Q1: -0.5218734162375451,
+        Q2: -0.8103400285781025,
+        Q3: -0.1980809489976914,
+        BeamLength: 12166299.999999998,
+      }
 
       let Region = {
-        MessageType: "Add",
-        UserName: "admin",
-        TargetObject: "RegionSpecial",
-        TargetType: "Region",
-        Color: "(0,128,255)",
+        MessageType: 'Add',
+        UserName: 'admin',
+        TargetObject: 'RegionSpecial',
+        TargetType: 'Region',
+        Color: '(0,128,255)',
         TrackPoints: [
           2014075.449, 5470994.897, 2578283.422, 733492.267, 3111826.929,
           5500477.134, -739558.858, 3387437.955, 5335456.353, -2761450.073,
           4029818.936, 4086932.165, -2915677.58, 5532538.106, 1248985.416,
         ],
-      };
+      }
 
-      createSat(window.viewer, sat1);
-      createSat(window.viewer, sat2);
-      changePos(window.viewer, pos1);
-      changePos(window.viewer, pos2);
+      createSat(window.viewer, sat1)
+      createSat(window.viewer, sat2)
+      changePos(window.viewer, pos1)
+      changePos(window.viewer, pos2)
 
-      createBeam(window.viewer, beam1);
-      createBeam(window.viewer, beam2);
-      addRegion(window.viewer, Region);
-
+      createBeam(window.viewer, beam1)
+      createBeam(window.viewer, beam2)
+      addRegion(window.viewer, Region)
+      changeBeamDir(window.viewer, beam1Pos)
+      changeBeamDir(window.viewer, beam2Pos)
       //*************************下雨
 
       //   const position = [];
@@ -278,298 +300,344 @@ export default defineComponent({
 
       //**********************信息展示************************
 
-      let preid = "";
-      let flexGUI = null;
-      let fixGUI = null;
+      let preid = ''
+      let flexGUI = null
+      let fixGUI = null
 
-      let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
       handler.setInputAction(function (movement) {
-        var pick = viewer.scene.pick(movement.position);
-        console.log(pick);
-        if (pick === undefined || pick.id._id === "大气") {
-          preid = "";
-          if (fixGUI) {
-            fixGUI.destroy();
-            fixGUI = null;
-          }
+        var pick = viewer.scene.pick(movement.position)
+        console.log(pick)
+        if (pick === undefined || pick.id._id === '大气') {
+          preid = ''
+          // if (fixGUI) {
+          //   fixGUI.destroy()
+          //   fixGUI = null
+          // }
           if (flexGUI) {
-            flexGUI.destroy();
-            flexGUI = null;
+            flexGUI.destroy()
+            flexGUI = null
           }
         } else {
-          var id = pick.id._id;
+          var id = pick.id._id
           if (id !== preid) {
-            if (fixGUI) {
-              fixGUI.destroy();
-              fixGUI = null;
-            }
+            // if (fixGUI) {
+            //   fixGUI.destroy()
+            //   fixGUI = null
+            // }
             if (flexGUI) {
-              flexGUI.destroy();
-              flexGUI = null;
+              flexGUI.destroy()
+              flexGUI = null
             }
-            if (id.slice(0, 4) === "Beam") {
-              var gui = new dat.GUI();
-              var fgui = new dat.GUI();
-              fixGUI = fgui;
-              flexGUI = gui;
-              preid = id;
-              gui.domElement.style.position = "absolute";
-              gui.domElement.style.left = "0px";
-              gui.domElement.style.top = "100px";
+            if (id.slice(0, 4) === 'Beam') {
+              var gui = new dat.GUI()
+              var fgui = new dat.GUI()
+              fixGUI = fgui
+              flexGUI = gui
+              preid = id
+              gui.domElement.style.position = 'absolute'
+              gui.domElement.style.left = '0px'
+              gui.domElement.style.top = '20px'
 
               document.querySelector(
-                "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
-              ).style.display = "none";
+                'body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom'
+              ).style.display = 'none'
 
               document.querySelector(
-                "body > div.dg.ac > div:nth-child(2) > div.close-button.close-bottom"
-              ).style.display = "none";
+                'body > div.dg.ac > div:nth-child(2) > div.close-button.close-bottom'
+              ).style.display = 'none'
 
-              fgui.domElement.style.position = "absolute";
-              fgui.domElement.style.left = "0px";
-              fgui.domElement.style.top = "250px";
+              fgui.domElement.style.position = 'absolute'
+              fgui.domElement.style.left = '0px'
+              fgui.domElement.style.top = '150px'
               let value =
-                viewer.entities.getById(id).cylinder.material._color._value;
-              console.log(viewer.entities.getById(id).cylinder);
+                viewer.entities.getById(id).cylinder.material._color._value
+              console.log(viewer.entities.getById(id).cylinder)
               var prop = {
+                名称: id,
                 alpha: value.alpha,
                 red: value.red * 255,
                 blue: value.blue * 255,
                 green: value.green * 255,
                 length:
-                  viewer.entities.getById(id).cylinder._length._value + "",
-              };
-              let len = prop.length;
-              let entity = viewer.entities.getById(id);
+                  viewer.entities.getById(id).cylinder._length._value + '',
+              }
+              let len = prop.length
+              let entity = viewer.entities.getById(id)
+
+              gui.add(prop, '名称')
               gui
-                .add(prop, "alpha", 0, 1)
+                .add(prop, 'alpha', 0, 1)
                 .step(0.05)
                 .onChange(function (val) {
                   {
                     entity.cylinder.material = Cesium.Color.fromAlpha(
                       entity.cylinder.material._color._value,
                       val
-                    );
+                    )
                   }
-                });
+                })
               gui
-                .add(prop, "red", 0, 255)
+                .add(prop, 'red', 0, 255)
                 .step(1)
                 .onChange(function (val) {
                   {
                     entity.cylinder.material = Cesium.Color.fromCssColorString(
-                      "rgb(" + val + "," + prop.green + "," + prop.blue + ")"
-                    ).withAlpha(prop.alpha);
+                      'rgb(' + val + ',' + prop.green + ',' + prop.blue + ')'
+                    ).withAlpha(prop.alpha)
                   }
-                });
+                })
               gui
-                .add(prop, "green", 0, 255)
+                .add(prop, 'green', 0, 255)
                 .step(1)
                 .onChange(function (val) {
                   {
                     entity.cylinder.material = Cesium.Color.fromCssColorString(
-                      "rgb(" + prop.red + "," + val + "," + prop.blue + ")"
-                    ).withAlpha(prop.alpha);
+                      'rgb(' + prop.red + ',' + val + ',' + prop.blue + ')'
+                    ).withAlpha(prop.alpha)
                   }
-                });
+                })
               gui
-                .add(prop, "blue", 0, 255)
+                .add(prop, 'blue', 0, 255)
                 .step(1)
                 .onChange(function (val) {
                   {
-                    let entity = viewer.entities.getById(id);
+                    let entity = viewer.entities.getById(id)
                     entity.cylinder.material = Cesium.Color.fromCssColorString(
-                      "rgb(" + prop.red + "," + prop.green + "," + val + ")"
-                    ).withAlpha(prop.alpha);
+                      'rgb(' + prop.red + ',' + prop.green + ',' + val + ')'
+                    ).withAlpha(prop.alpha)
                   }
-                });
-              fgui.add(prop, "length").onChange(function () {
+                })
+              fgui.add(prop, 'length').onChange(function () {
                 {
-                  prop.length = len;
+                  prop.length = len
                 }
-              });
-              let inputNode = document.getElementsByClassName("c");
-              inputNode[4].firstChild.disabled = true;
-            } else if (id.slice(0, 3) === "Sat") {
-              var gui = new dat.GUI();
-              fixGUI = gui;
-              preid = id;
-              gui.domElement.style.position = "absolute";
-              gui.domElement.style.left = "0px";
-              gui.domElement.style.top = "100px";
+              })
+              let inputNode = document.getElementsByClassName('c')
+              inputNode[4].firstChild.disabled = true
+            } else if (id.slice(0, 3) === 'Sat') {
+              var gui = new dat.GUI()
+              var fgui = new dat.GUI()
+              fixGUI = gui
+              flexGUI = fgui
+              preid = id
+              gui.domElement.style.position = 'absolute'
+              gui.domElement.style.left = '0px'
+              gui.domElement.style.top = '200px'
 
-              let value = viewer.entities.getById(id).position._value;
-              console.log(value);
+              fgui.domElement.style.position = 'absolute'
+              fgui.domElement.style.left = '0px'
+              fgui.domElement.style.top = '470px'
+
+              let value = viewer.entities.getById(id).position._value
+              let ori = viewer.entities.getById(id).orientation._value
+              console.log(ori)
 
               var prop = {
-                "经度/°": Number(
+                名称: id,
+                '经度/°': Number(
                   Cesium.Math.toDegrees(
                     Cesium.Cartographic.fromCartesian(value).latitude
                   ).toFixed(6)
                 ),
-                "纬度/°": Number(
+                '纬度/°': Number(
                   Cesium.Math.toDegrees(
                     Cesium.Cartographic.fromCartesian(value).longitude
                   ).toFixed(6)
                 ),
-                "高度/km": Number(
+                '高度/km': Number(
                   Cesium.Math.toDegrees(
                     Cesium.Cartographic.fromCartesian(value).height
                   ).toFixed(6) / 1000
                 ),
-              };
-              gui.add(prop, "经度/°");
-              gui.add(prop, "纬度/°");
-              gui.add(prop, "高度/km");
-              let inputNode = document.getElementsByClassName("c");
+                '坐标(x,y,z)/km':
+                  '(' +
+                  (value.x / 1000).toFixed(0) +
+                  ',' +
+                  (value.y / 1000).toFixed(0) +
+                  ',' +
+                  (value.z / 1000).toFixed(0) +
+                  ')',
+                转向w: ori.w.toFixed(6),
+                转向x: ori.x.toFixed(6),
+                转向y: ori.y.toFixed(6),
+                转向z: ori.z.toFixed(6),
+              }
+              let scale = viewer.entities.getById(id)._model._scale._value
+              console.log(scale)
+              var prop2 = {
+                大小: scale,
+              }
+              gui.add(prop, '名称')
+              gui.add(prop, '经度/°')
+              gui.add(prop, '纬度/°')
+              gui.add(prop, '高度/km')
+              gui.add(prop, '坐标(x,y,z)/km')
+              gui.add(prop, '转向w')
+              gui.add(prop, '转向x')
+              gui.add(prop, '转向y')
+              gui.add(prop, '转向z')
+              fgui
+                .add(prop2, '大小', 50, 400)
+                .step(1)
+                .onChange(function (val) {
+                  {
+                    let entity = viewer.entities.getById(id)
+                    entity._model._scale._value = val
+                  }
+                })
+
+              let inputNode = document.getElementsByClassName('c')
               for (let i of inputNode) {
-                i.firstChild.disabled = true;
+                i.firstChild.disabled = true
               }
               document.querySelector(
-                "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
-              ).style.display = "none";
-            } else if (id.slice(0, 6) === "Region") {
-              var gui = new dat.GUI();
-              flexGUI = gui;
-              preid = id;
-              gui.domElement.style.position = "absolute";
-              gui.domElement.style.left = "0px";
-              gui.domElement.style.top = "100px";
+                'body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom'
+              ).style.display = 'none'
+            } else if (id.slice(0, 6) === 'Region') {
+              var gui = new dat.GUI()
+              flexGUI = gui
+              preid = id
+              gui.domElement.style.position = 'absolute'
+              gui.domElement.style.left = '0px'
+              gui.domElement.style.top = '500px'
 
               document.querySelector(
-                "body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom"
-              ).style.display = "none";
+                'body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom'
+              ).style.display = 'none'
 
               let value =
-                viewer.entities.getById(id).polygon.material._color._value;
+                viewer.entities.getById(id).polygon.material._color._value
               var prop = {
+                名称: id,
                 alpha: value.alpha,
                 red: value.red * 255,
                 blue: value.blue * 255,
                 green: value.green * 255,
-              };
-              let entity = viewer.entities.getById(id);
-              let streamer = viewer.entities.getById(id + "streamer");
+              }
+              let entity = viewer.entities.getById(id)
+              let streamer = viewer.entities.getById(id + 'streamer')
+              gui.add(prop, '名称')
               gui
-                .add(prop, "alpha", 0, 1)
+                .add(prop, 'alpha', 0, 1)
                 .step(0.05)
                 .onChange(function (val) {
                   {
                     entity.polygon.material = Cesium.Color.fromAlpha(
                       entity.polygon.material._color._value,
                       val
-                    );
+                    )
                   }
-                });
+                })
               gui
-                .add(prop, "red", 0, 255)
+                .add(prop, 'red', 0, 255)
                 .step(1)
                 .onChange(function (val) {
                   {
                     let color =
-                      "rgb(" + val + "," + prop.green + "," + prop.blue + ")";
+                      'rgb(' + val + ',' + prop.green + ',' + prop.blue + ')'
                     entity.polygon.material = Cesium.Color.fromCssColorString(
                       color
-                    ).withAlpha(prop.alpha);
+                    ).withAlpha(prop.alpha)
                     streamer.wall.material =
                       new PolylineTrailLinkMaterialProperty(
                         Cesium.Color.fromCssColorString(color),
                         1500
-                      );
+                      )
                   }
-                });
+                })
               gui
-                .add(prop, "green", 0, 255)
+                .add(prop, 'green', 0, 255)
                 .step(1)
                 .onChange(function (val) {
                   {
                     let color =
-                      "rgb(" + prop.red + "," + val + "," + prop.blue + ")";
+                      'rgb(' + prop.red + ',' + val + ',' + prop.blue + ')'
                     entity.polygon.material = Cesium.Color.fromCssColorString(
                       color
-                    ).withAlpha(prop.alpha);
+                    ).withAlpha(prop.alpha)
                     streamer.wall.material =
                       new PolylineTrailLinkMaterialProperty(
                         Cesium.Color.fromCssColorString(color),
                         1500
-                      );
+                      )
                   }
-                });
+                })
               gui
-                .add(prop, "blue", 0, 255)
+                .add(prop, 'blue', 0, 255)
                 .step(1)
                 .onChange(function (val) {
                   {
                     let color =
-                      "rgb(" + prop.red + "," + prop.green + "," + val + ")";
+                      'rgb(' + prop.red + ',' + prop.green + ',' + val + ')'
                     entity.polygon.material = Cesium.Color.fromCssColorString(
                       color
-                    ).withAlpha(prop.alpha);
+                    ).withAlpha(prop.alpha)
                     streamer.wall.material =
                       new PolylineTrailLinkMaterialProperty(
                         Cesium.Color.fromCssColorString(color),
                         1500
-                      );
+                      )
                   }
-                });
+                })
             }
 
-            let info = document.getElementsByClassName("cesium-infoBox")["0"];
-            console.log(info.firstChild.parentElement);
+            let info = document.getElementsByClassName('cesium-infoBox')['0']
+            console.log(info.firstChild.parentElement)
             info.firstChild.parentElement.setAttribute(
-              "style",
-              "top: 110px;width:0"
-            );
+              'style',
+              'top: 110px;width:20%'
+            )
           }
         }
-      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    });
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+    })
 
     //******************************************************
 
     setTimeout(() => {
-      let imgUrl = "../src/assets/cloud.jpg";
+      let imgUrl = '../src/assets/cloud.jpg'
       let imgMaterial = new Cesium.ImageMaterialProperty({
         image: imgUrl,
         color: Cesium.Color.WHITE.withAlpha(0.2),
-      });
+      })
 
       let i = viewer.entities.add({
-        id: "大气",
+        id: '大气',
         position: new Cesium.Cartesian3(0, 0, 0),
         ellipsoid: {
           radii: new Cesium.Cartesian3(6400000.0, 6400000.0, 6400000.0),
           material: imgMaterial,
         },
-      });
-    }, 500);
+      })
+    }, 500)
 
     //**********************报文************************
 
     const fmsg = (msg) => {
-      console.log(msg);
-      let ret = JSON.parse(msg);
-      if (ret.MessageType === "Modify") {
-        if (ret.TargetType === "3DModel") {
-          changePos(window.viewer, ret);
-        } else if (ret.TargetType === "Track") {
-          addTrack(window.viewer, ret);
-        } else if (ret.TargetType === "Beam") {
-          if (ret.TargetObject === "Beam12") {
-            ret.BeamLength = ret.BeamLength - 6371000;
+      console.log(msg)
+      let ret = JSON.parse(msg)
+      if (ret.MessageType === 'Modify') {
+        if (ret.TargetType === '3DModel') {
+          changePos(window.viewer, ret)
+        } else if (ret.TargetType === 'Track') {
+          addTrack(window.viewer, ret)
+        } else if (ret.TargetType === 'Beam') {
+          if (ret.TargetObject === 'Beam12') {
+            ret.BeamLength = ret.BeamLength - 6371000
           }
-          changeBeamDir(window.viewer, ret);
+          changeBeamDir(window.viewer, ret)
         }
-      } else if (ret.MessageType === "Add") {
-        if (ret.TargetType === "3DModel") {
-          createSat(window.viewer, ret);
-        } else if (ret.TargetType === "Track") {
-          addTrack(window.viewer, ret);
-        } else if (ret.TargetType === "Beam") {
-          createBeam(window.viewer, ret);
+      } else if (ret.MessageType === 'Add') {
+        if (ret.TargetType === '3DModel') {
+          createSat(window.viewer, ret)
+        } else if (ret.TargetType === 'Track') {
+          addTrack(window.viewer, ret)
+        } else if (ret.TargetType === 'Beam') {
+          createBeam(window.viewer, ret)
         }
       }
-    };
+    }
 
     //********************************************************
 
@@ -578,9 +646,9 @@ export default defineComponent({
 
     return {
       fmsg,
-    };
+    }
   },
-});
+})
 </script>
 
 <style scoped>
