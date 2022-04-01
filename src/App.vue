@@ -2,7 +2,7 @@
   <div class="container" style="background-image: url(../src/assets/back.jpg); background-size: 100%;">
     <div style="z-index: 1000;" id="cesiumContainer">
       <!-- <test-header></test-header> -->
-      <!-- <object-menu></object-menu> -->
+      <change-menu></change-menu>
       <!-- <web-socket @cmsg="fmsg"></web-socket> -->
     </div>
   </div>
@@ -20,6 +20,8 @@ import addTrack from './function/addTrack'
 import createBeam from './function/createBeam'
 import changeCamera from './function/changeCamera'
 import TestHeader from './components/TestHeader.vue'
+import ObjectMenu from './components/ObjectMenu.vue'
+import ChangeMenu from './components/ChangeMenu.vue'
 import changeBeamDir from './function/changeBeamDir'
 import addFollow from './function/addFollow'
 import addRegion from './function/addRegion'
@@ -29,6 +31,8 @@ export default defineComponent({
   components: {
     WebSocket,
     TestHeader,
+    ObjectMenu,
+    ChangeMenu,
   },
   setup() {
     onMounted(() => {
@@ -202,6 +206,18 @@ export default defineComponent({
       addRegion(window.viewer, Region)
       changeBeamDir(window.viewer, beam1Pos)
       changeBeamDir(window.viewer, beam2Pos)
+
+      // var collection = viewer.scene.postProcessStages
+      // var snow = Cesium.PostProcessStageLibrary.createSnowStage()
+      // console.log(postProcessStages)
+      // collection.add(snow)
+      // scene.skyAtmosphere.hueShift = -0.8
+      // scene.skyAtmosphere.saturationShift = -0.7
+      // scene.skyAtmosphere.brightnessShift = -0.33
+
+      // scene.fog.density = 0.001
+      // scene.fog.minimumBrightness = 0.8
+
       //*************************下雨
 
       //   const position = [];
@@ -298,298 +314,17 @@ export default defineComponent({
       // });
       // collection.add(snow);
 
-      //**********************信息展示************************
-
-      let preid = ''
-      let flexGUI = null
-      let fixGUI = null
+      //**********************选中目标************************
 
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
       handler.setInputAction(function (movement) {
-        var pick = viewer.scene.pick(movement.position)
-        console.log(pick)
-        if (pick === undefined || pick.id._id === '大气') {
-          preid = ''
-          // if (fixGUI) {
-          //   fixGUI.destroy()
-          //   fixGUI = null
-          // }
-          if (flexGUI) {
-            flexGUI.destroy()
-            flexGUI = null
-          }
-        } else {
-          var id = pick.id._id
-          if (id !== preid) {
-            // if (fixGUI) {
-            //   fixGUI.destroy()
-            //   fixGUI = null
-            // }
-            if (flexGUI) {
-              flexGUI.destroy()
-              flexGUI = null
-            }
-            if (id.slice(0, 4) === 'Beam') {
-              var gui = new dat.GUI()
-              var fgui = new dat.GUI()
-              fixGUI = fgui
-              flexGUI = gui
-              preid = id
-              gui.domElement.style.position = 'absolute'
-              gui.domElement.style.left = '0px'
-              gui.domElement.style.top = '20px'
-
-              document.querySelector(
-                'body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom'
-              ).style.display = 'none'
-
-              document.querySelector(
-                'body > div.dg.ac > div:nth-child(2) > div.close-button.close-bottom'
-              ).style.display = 'none'
-
-              fgui.domElement.style.position = 'absolute'
-              fgui.domElement.style.left = '0px'
-              fgui.domElement.style.top = '150px'
-              let value =
-                viewer.entities.getById(id).cylinder.material._color._value
-              console.log(viewer.entities.getById(id).cylinder)
-              var prop = {
-                名称: id,
-                alpha: value.alpha,
-                red: value.red * 255,
-                blue: value.blue * 255,
-                green: value.green * 255,
-                length:
-                  viewer.entities.getById(id).cylinder._length._value + '',
-              }
-              let len = prop.length
-              let entity = viewer.entities.getById(id)
-
-              gui.add(prop, '名称')
-              gui
-                .add(prop, 'alpha', 0, 1)
-                .step(0.05)
-                .onChange(function (val) {
-                  {
-                    entity.cylinder.material = Cesium.Color.fromAlpha(
-                      entity.cylinder.material._color._value,
-                      val
-                    )
-                  }
-                })
-              gui
-                .add(prop, 'red', 0, 255)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    entity.cylinder.material = Cesium.Color.fromCssColorString(
-                      'rgb(' + val + ',' + prop.green + ',' + prop.blue + ')'
-                    ).withAlpha(prop.alpha)
-                  }
-                })
-              gui
-                .add(prop, 'green', 0, 255)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    entity.cylinder.material = Cesium.Color.fromCssColorString(
-                      'rgb(' + prop.red + ',' + val + ',' + prop.blue + ')'
-                    ).withAlpha(prop.alpha)
-                  }
-                })
-              gui
-                .add(prop, 'blue', 0, 255)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    let entity = viewer.entities.getById(id)
-                    entity.cylinder.material = Cesium.Color.fromCssColorString(
-                      'rgb(' + prop.red + ',' + prop.green + ',' + val + ')'
-                    ).withAlpha(prop.alpha)
-                  }
-                })
-              fgui.add(prop, 'length').onChange(function () {
-                {
-                  prop.length = len
-                }
-              })
-              let inputNode = document.getElementsByClassName('c')
-              inputNode[4].firstChild.disabled = true
-            } else if (id.slice(0, 3) === 'Sat') {
-              var gui = new dat.GUI()
-              var fgui = new dat.GUI()
-              fixGUI = gui
-              flexGUI = fgui
-              preid = id
-              gui.domElement.style.position = 'absolute'
-              gui.domElement.style.left = '0px'
-              gui.domElement.style.top = '200px'
-
-              fgui.domElement.style.position = 'absolute'
-              fgui.domElement.style.left = '0px'
-              fgui.domElement.style.top = '470px'
-
-              let value = viewer.entities.getById(id).position._value
-              let ori = viewer.entities.getById(id).orientation._value
-              console.log(ori)
-
-              var prop = {
-                名称: id,
-                '经度/°': Number(
-                  Cesium.Math.toDegrees(
-                    Cesium.Cartographic.fromCartesian(value).latitude
-                  ).toFixed(6)
-                ),
-                '纬度/°': Number(
-                  Cesium.Math.toDegrees(
-                    Cesium.Cartographic.fromCartesian(value).longitude
-                  ).toFixed(6)
-                ),
-                '高度/km': Number(
-                  Cesium.Math.toDegrees(
-                    Cesium.Cartographic.fromCartesian(value).height
-                  ).toFixed(6) / 1000
-                ),
-                '坐标(x,y,z)/km':
-                  '(' +
-                  (value.x / 1000).toFixed(0) +
-                  ',' +
-                  (value.y / 1000).toFixed(0) +
-                  ',' +
-                  (value.z / 1000).toFixed(0) +
-                  ')',
-                转向w: ori.w.toFixed(6),
-                转向x: ori.x.toFixed(6),
-                转向y: ori.y.toFixed(6),
-                转向z: ori.z.toFixed(6),
-              }
-              let scale = viewer.entities.getById(id)._model._scale._value
-              console.log(scale)
-              var prop2 = {
-                大小: scale,
-              }
-              gui.add(prop, '名称')
-              gui.add(prop, '经度/°')
-              gui.add(prop, '纬度/°')
-              gui.add(prop, '高度/km')
-              gui.add(prop, '坐标(x,y,z)/km')
-              gui.add(prop, '转向w')
-              gui.add(prop, '转向x')
-              gui.add(prop, '转向y')
-              gui.add(prop, '转向z')
-              fgui
-                .add(prop2, '大小', 50, 400)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    let entity = viewer.entities.getById(id)
-                    entity._model._scale._value = val
-                  }
-                })
-
-              let inputNode = document.getElementsByClassName('c')
-              for (let i of inputNode) {
-                i.firstChild.disabled = true
-              }
-              document.querySelector(
-                'body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom'
-              ).style.display = 'none'
-            } else if (id.slice(0, 6) === 'Region') {
-              var gui = new dat.GUI()
-              flexGUI = gui
-              preid = id
-              gui.domElement.style.position = 'absolute'
-              gui.domElement.style.left = '0px'
-              gui.domElement.style.top = '500px'
-
-              document.querySelector(
-                'body > div.dg.ac > div:nth-child(1) > div.close-button.close-bottom'
-              ).style.display = 'none'
-
-              let value =
-                viewer.entities.getById(id).polygon.material._color._value
-              var prop = {
-                名称: id,
-                alpha: value.alpha,
-                red: value.red * 255,
-                blue: value.blue * 255,
-                green: value.green * 255,
-              }
-              let entity = viewer.entities.getById(id)
-              let streamer = viewer.entities.getById(id + 'streamer')
-              gui.add(prop, '名称')
-              gui
-                .add(prop, 'alpha', 0, 1)
-                .step(0.05)
-                .onChange(function (val) {
-                  {
-                    entity.polygon.material = Cesium.Color.fromAlpha(
-                      entity.polygon.material._color._value,
-                      val
-                    )
-                  }
-                })
-              gui
-                .add(prop, 'red', 0, 255)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    let color =
-                      'rgb(' + val + ',' + prop.green + ',' + prop.blue + ')'
-                    entity.polygon.material = Cesium.Color.fromCssColorString(
-                      color
-                    ).withAlpha(prop.alpha)
-                    streamer.wall.material =
-                      new PolylineTrailLinkMaterialProperty(
-                        Cesium.Color.fromCssColorString(color),
-                        1500
-                      )
-                  }
-                })
-              gui
-                .add(prop, 'green', 0, 255)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    let color =
-                      'rgb(' + prop.red + ',' + val + ',' + prop.blue + ')'
-                    entity.polygon.material = Cesium.Color.fromCssColorString(
-                      color
-                    ).withAlpha(prop.alpha)
-                    streamer.wall.material =
-                      new PolylineTrailLinkMaterialProperty(
-                        Cesium.Color.fromCssColorString(color),
-                        1500
-                      )
-                  }
-                })
-              gui
-                .add(prop, 'blue', 0, 255)
-                .step(1)
-                .onChange(function (val) {
-                  {
-                    let color =
-                      'rgb(' + prop.red + ',' + prop.green + ',' + val + ')'
-                    entity.polygon.material = Cesium.Color.fromCssColorString(
-                      color
-                    ).withAlpha(prop.alpha)
-                    streamer.wall.material =
-                      new PolylineTrailLinkMaterialProperty(
-                        Cesium.Color.fromCssColorString(color),
-                        1500
-                      )
-                  }
-                })
-            }
-
-            let info = document.getElementsByClassName('cesium-infoBox')['0']
-            console.log(info.firstChild.parentElement)
-            info.firstChild.parentElement.setAttribute(
-              'style',
-              'top: 110px;width:20%'
-            )
-          }
-        }
+        // 右显示框样式修改
+        let info = document.getElementsByClassName('cesium-infoBox')['0']
+        console.log(info.firstChild.parentElement)
+        info.firstChild.parentElement.setAttribute(
+          'style',
+          'top: 110px;width:20%'
+        )
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     })
 
@@ -611,6 +346,18 @@ export default defineComponent({
         },
       })
     }, 500)
+
+    setTimeout(() => {
+      let info2 = document.getElementsByClassName(
+        'cesium-performanceDisplay-ms'
+      )['0']
+      let info3 = document.getElementsByClassName(
+        'cesium-performanceDisplay-fps'
+      )['0']
+      // console.log(info2)
+      info2.firstChild.parentElement.setAttribute('style', 'color: #edffff')
+      info3.firstChild.parentElement.setAttribute('style', 'color: #edffff')
+    }, 1000)
 
     //**********************报文************************
 
