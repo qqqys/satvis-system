@@ -4,6 +4,7 @@
 <script>
 import * as Cesium from 'cesium'
 import dat from 'dat.gui'
+import PolylineTrailLinkMaterialProperty from '../function/addstreamer'
 const Entities = [
   {
     id: 'Sat11',
