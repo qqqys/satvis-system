@@ -1,9 +1,9 @@
 <template>
   <div class="container" style="background-image: url(../src/assets/back.jpg); background-size: 100%;">
     <div style="z-index: 1000;" id="cesiumContainer">
-      <!-- <test-header></test-header> -->
+      <test-header></test-header>
       <change-menu></change-menu>
-      <!-- <web-socket @cmsg="fmsg"></web-socket> -->
+      <web-socket @cmsg="fmsg"></web-socket>
     </div>
   </div>
 </template>
@@ -218,101 +218,165 @@ export default defineComponent({
       // scene.fog.density = 0.001
       // scene.fog.minimumBrightness = 0.8
 
-      //*************************下雨
+      // *************************下雨
 
-      //   const position = [];
+ const scene = viewer.scene;
+      const resetCameraFunction = function () {
+        scene.camera.setView({
+          destination: Cesium.Cartesian3.fromElements(2014075.449, 5470994.897, 2985563.7039122293),
+          orientation: {
+            heading: 4.731089976107251,
+            pitch: -0.32003481981370063,
+          },
+        });
+      };
+      resetCameraFunction();
+      let cartographic = Cesium.Cartographic.fromCartesian(scene.camera.position)
+      cartographic.height=0
+      let tempLoc=Cesium.Cartesian3.fromDegrees(cartographic.longitude,cartographic.latitude,cartographic.height)
+      console.log(tempLoc)
+      // snow
+      const snowParticleSize = 12.0;
+      const snowRadius = 1000000.0;
+      const minimumSnowImageSize = new Cesium.Cartesian2(
+        snowParticleSize,
+        snowParticleSize
+      );
+      const maximumSnowImageSize = new Cesium.Cartesian2(
+        snowParticleSize * 2.0,
+        snowParticleSize * 2.0
+      );
+      let snowGravityScratch = new Cesium.Cartesian3();
+      const snowUpdate = function (particle, dt) {
+        snowGravityScratch = Cesium.Cartesian3.normalize(
+          particle.position,
+          snowGravityScratch
+        );
+        Cesium.Cartesian3.multiplyByScalar(
+          snowGravityScratch,
+          Cesium.Math.randomBetween(-30.0, -300.0),
+          snowGravityScratch
+        );
+        particle.velocity = Cesium.Cartesian3.add(
+          particle.velocity,
+          snowGravityScratch,
+          particle.velocity
+        );
+        const distance = Cesium.Cartesian3.distance(
+          scene.camera.position,
+          particle.position
+        );
+        // if(distance > ){
 
-      // for (var i = 0; i < Region.TrackPoints.length; i += 3) {
-      //     position.push(Cesium.Cartesian3.fromElements(Region.TrackPoints[i], Region.TrackPoints[i + 1], Region.TrackPoints[i + 2]));
-      // }
+        // }
+        if (distance > snowRadius) {
+          particle.endColor.alpha = 0.0;
+        } else {
+          particle.endColor.alpha = 1.0 / (distance / snowRadius + 0.1);
+        }
+      };
 
-      //   viewer.entities.add({
-      //     name: Region.TargetObject,
-      //     id: Region.TargetObject,
-      //     polygon: {
-      //       hierarchy: new Cesium.PolygonHierarchy(position),
-      //       height: 50002,
-      //     },
-      //   });
+      // rain
+      // const rainParticleSize = 15.0;
+      // const rainRadius = 100000.0;
+      // const rainImageSize = new Cesium.Cartesian2(
+      //   rainParticleSize,
+      //   rainParticleSize * 2.0
+      // );
+      // let rainGravityScratch = new Cesium.Cartesian3();
+      // const rainUpdate = function (particle, dt) {
+      //   rainGravityScratch = Cesium.Cartesian3.normalize(
+      //     particle.position,
+      //     rainGravityScratch
+      //   );
+      //   rainGravityScratch = Cesium.Cartesian3.multiplyByScalar(
+      //     rainGravityScratch,
+      //     -1050.0,
+      //     rainGravityScratch
+      //   );
 
-      //     let Rain =  `
-      //                 uniform sampler2D colorTexture;//输入的场景渲染照片
-      //                 varying vec2 v_textureCoordinates;
-      //                 uniform float vrain;
+      //   particle.position = Cesium.Cartesian3.add(
+      //     particle.position,
+      //     rainGravityScratch,
+      //     particle.position
+      //   );
 
-      //                 float hash(float x){
-      //                     return fract(sin(x*133.3)*13.13);
-      //                 }
+      //   const distance = Cesium.Cartesian3.distance(
+      //     scene.camera.position,
+      //     particle.position
+      //   );
+      //   if (distance > rainRadius) {
+      //     particle.endColor.alpha = 0.0;
+      //   } else {
+      //     particle.endColor.alpha =
+      //       Cesium.Color.BLUE.alpha / (distance / rainRadius + 0.1);
+      //   }
+      // };
 
-      //                 void main(void){
-      //                     float time = czm_frameNumber / vrain;
-      //                     vec2 resolution = czm_viewport.zw;
 
-      //                     vec2 uv=(gl_FragCoord.xy*2.-resolution.xy)/min(resolution.x,resolution.y);
-      //                     vec3 c=vec3(.6,.7,.8);
-      //                     float a=0.4;
-      //                     float si=sin(a),co=cos(a);
-      //                     uv*=mat2(co,-si,si,co);
-      //                     uv*=length(uv+vec2(0,4.9))*.3+1.;
 
-      //                     float v=1.-sin(hash(floor(uv.x*100.))*2.);
-      //                     float b=clamp(abs(sin(20.*time*v+uv.y*(5./(2.+v))))-.95,0.,1.)*20.;
 
-      //                     c*=v*b; //屏幕上雨的颜色
-      //                     gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), vec4(c,1), 0.5); //将雨和三维场景融合
-      //                 }
-      //       `
-      //     let Snow = `
-      // uniform sampler2D colorTexture; //输入的场景渲染照片
-      // varying vec2 v_textureCoordinates;
+          function snow() {
+            // scene.primitives.removeAll();
+            scene.primitives.add(
+              new Cesium.ParticleSystem({
+                modelMatrix: new Cesium.Matrix4.fromTranslation(
+                  scene.camera.position
+                  // tempLoc
+                  // Cesium.Cartesian3.fromElements(2014075.449, 5470994.897, 2985563.7039122293-6371000)
+                ),
+                minimumSpeed: -1.0,
+                maximumSpeed: 0.0,
+                lifetime: 10.0,
+                emitter: new Cesium.SphereEmitter(snowRadius),
+                startScale: 0.5,
+                endScale: 1.0,
+                image: "../src/assets/雨滴.png",
+                emissionRate: 7000.0,
+                startColor: Cesium.Color.WHITE.withAlpha(0.0),
+                endColor: Cesium.Color.WHITE.withAlpha(1.0),
+                minimumImageSize: minimumSnowImageSize,
+                maximumImageSize: maximumSnowImageSize,
+                updateCallback: snowUpdate,
+              })
+            );
 
-      // float snow(vec2 uv, float scale) {
-      //     float time = czm_frameNumber / 60.0;
-      //     float w = smoothstep(1., 0., -uv.y * (scale / 10.));
-      //     if (w < .1)
-      //         return 0.;
-      //     uv += time / scale;
-      //     uv.y += time * 2. / scale;
-      //     uv.x += sin(uv.y + time * .5) / scale;
-      //     uv *= scale;
-      //     vec2 s = floor(uv), f = fract(uv), p;
-      //     float k = 3., d;
-      //     p = .5 + .35 * sin(11. * fract(sin((s + p + scale) * mat2(7, 3, 6, 5)) * 5.)) - f;
-      //     d = length(p);
-      //     k = min(d, k);
-      //     k = smoothstep(0., k, sin(f.x + f.y) * 0.01);
-      //     return k * w;
-      // }
+            // scene.skyAtmosphere.hueShift = -0.8;
+            // scene.skyAtmosphere.saturationShift = -0.7;
+            // scene.skyAtmosphere.brightnessShift = -0.33;
+            // scene.fog.density = 0.001;
+            // scene.fog.minimumBrightness = 0.8;
+          }
+          snow()
+          console.log(Cesium.SphereEmitter())
+          // function rain() {
+          //   // scene.primitives.removeAll();
+          //   scene.primitives.add(
+          //     new Cesium.ParticleSystem({
+          //       modelMatrix: new Cesium.Matrix4.fromTranslation(
+          //         scene.camera.position
+          //       ),
+          //       speed: -1.0,
+          //       lifetime: 15.0,
+          //       emitter: new Cesium.SphereEmitter(rainRadius),
+          //       startScale: 1.0,
+          //       endScale: 0.0,
+          //       image: "../src/assets/雨滴.png",
+          //       emissionRate: 9000.0,
+          //       startColor: new Cesium.Color(0.27, 0.5, 0.7, 0.0),
+          //       endColor: new Cesium.Color(0.27, 0.5, 0.7, 0.98),
+          //       imageSize: rainImageSize,
+          //       updateCallback: rainUpdate,
+          //     })
+          //   );
 
-      // void main(void) {
-      //     vec2 resolution = czm_viewport.zw;
-      //     vec2 uv = (gl_FragCoord.xy * 2. - resolution.xy) / min(resolution.x, resolution.y);
-      //     vec3 finalColor = vec3(0);
-      //     // float c=smoothstep(1.,0.3,clamp(uv.y*.3+.8,0.,.75));
-      //     float c = 0.0;
-      //     c += snow(uv, 30.) * .0;
-      //     c += snow(uv, 20.) * .0;
-      //     c += snow(uv, 15.) * .0;
-      //     c += snow(uv, 10.);
-      //     c += snow(uv, 8.);
-      //     c += snow(uv, 6.);
-      //     c += snow(uv, 5.);
-      //     finalColor = (vec3(c));                                                                      //屏幕上雪的颜色
-      //     gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), vec4(finalColor, 1), 0.5); //将雪和三维场景融合
-      // }
-      // `
-      // viewer.shadowMap.darkness = 0.9; //阴影强度
-      // let collection = viewer.scene.postProcessStages;
-      // let snow = new Cesium.PostProcessStage({
-      //   name: "czm_rain",
-      //   fragmentShader:Snow,
-      //   uniforms: {
-      //     vrain: function () {
-      //       return 30; //value:时间
-      //     },
-      //   },
-      // });
-      // collection.add(snow);
+          //   scene.skyAtmosphere.hueShift = -0.97;
+          //   scene.skyAtmosphere.saturationShift = 0.25;
+          //   scene.skyAtmosphere.brightnessShift = -0.4;
+          //   scene.fog.density = 0.00025;
+          //   scene.fog.minimumBrightness = 0.01;
+          // }
+
 
       //**********************选中目标************************
 
@@ -330,22 +394,22 @@ export default defineComponent({
 
     //******************************************************
 
-    setTimeout(() => {
-      let imgUrl = '../src/assets/cloud.jpg'
-      let imgMaterial = new Cesium.ImageMaterialProperty({
-        image: imgUrl,
-        color: Cesium.Color.WHITE.withAlpha(0.2),
-      })
+    // setTimeout(() => {
+    //   let imgUrl = '../src/assets/cloud.jpg'
+    //   let imgMaterial = new Cesium.ImageMaterialProperty({
+    //     image: imgUrl,
+    //     color: Cesium.Color.WHITE.withAlpha(0.2),
+    //   })
 
-      let i = viewer.entities.add({
-        id: '大气',
-        position: new Cesium.Cartesian3(0, 0, 0),
-        ellipsoid: {
-          radii: new Cesium.Cartesian3(6400000.0, 6400000.0, 6400000.0),
-          material: imgMaterial,
-        },
-      })
-    }, 500)
+    //   let i = viewer.entities.add({
+    //     id: '大气',
+    //     position: new Cesium.Cartesian3(0, 0, 0),
+    //     ellipsoid: {
+    //       radii: new Cesium.Cartesian3(6400000.0, 6400000.0, 6400000.0),
+    //       material: imgMaterial,
+    //     },
+    //   })
+    // }, 500)
 
     setTimeout(() => {
       let info2 = document.getElementsByClassName(
@@ -395,6 +459,7 @@ export default defineComponent({
       fmsg,
     }
   },
+     
 })
 </script>
 
