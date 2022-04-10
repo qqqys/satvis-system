@@ -1,164 +1,72 @@
 <template>
-  <div id="app" class="menu">
-    <!--主界面 -->
-    <div class="loginbody border">
-      <!-- 显示框 -->
-      <div class="border_corner border_corner_left_top"></div>
-      <div class="border_corner border_corner_right_top"></div>
-      <div class="border_corner border_corner_left_bottom"></div>
-      <div class="border_corner border_corner_right_bottom"></div>
-      <div class="part border" style="text-align: center;">场景对象目录</div>
-      <div class="satellite">
-        <template v-for="entity in Entities" :key="entity.id">
-          <div class="part border" style="text-indent: 1em;" @click="entity.show = !entity.show">
-            <i class="right" v-if="!entity.show"></i>
-            <i class="down" v-if="entity.show"></i>
-            <label>&nbsp;&nbsp;{{entity.id }}</label>
-          </div>
-          <template v-if="entity.show">
-            <div
-              v-for="Beam in entity.Beam"
-              :key="Beam"
-              class="part border"
-              style="text-indent: 2em;"
-            >
-              <label :style="{color: Beam.color}">{{ Beam.id }}</label>
-            </div>
-          </template>
-        </template>
-        <!-- 卫星显示 -->
+  <div class="menu">
+    <div class="sort">
+    </div>
+    <div class="detail">
+      <div class="detailelement">
+        <input
+          type="checkbox"
+          v-model="menu.enableLighting"
+        >启用以太阳为光源的地球
+        <p>{{menu.enableLighting}}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-const Entities = [
-  {
-    id: "Sat11",
-    show: true,
-    Beam:[
-      {
-        id:"Beam11",
-        color:"red"
-      },
-      {
-        id:"Beam12",
-        color:"pink"
-      },
-      
-    ],
-  },
-    {
-    id: "Sat12",
-    show: false,
-    Beam:[
-      "Beam11",
-      "Beam12"
-    ],
-  }
-]
+import { reactive,ref,watch } from 'vue-demi';
 export default {
-  // props: ["Entities"],
   setup() {
+    let menu = reactive({
+      enableLighting:false,
+    });
+    setTimeout(() => {
+      menu.enableLighting = ref(window.viewer.scene._globe.enableLighting)
+    }, 2000);
+
+    watch(menu.enableLighting, (newValue, oldValue) => {
+      window.viewer.scene._globe.enableLighting = newValue
+    })
+    
     return {
-      Entities
-    }
-  }
+      menu,
+    };
+  },
 };
 </script>
 
 <style>
 .menu {
-  width: 208px;
-  height: 502px;
-  transform: translate(50px, 100px);
+  right: 25%;
+  width: 50%;
+  top: 10%;
+  height: 80%;
   overflow-x: hidden;
   overflow-y: auto;
   position: absolute;
-  z-index: 20;
+  z-index: 9999;
+  background-color: white;
 }
 
-.loginbody {
-  transform: translate(0, 4px);
-  height: 490px;
-  margin: auto;
-}
-
-.border {
-  width: 200px;
-  border: 2px solid rgb(67, 248, 241);
-  position: relative;
-}
-/*四个角框*/
-
-.border_corner {
-  z-index: 2500;
+.sort {
+  top:0;
+  left:0;
+  width: 25%;
   position: absolute;
-  width: 18px;
-  height: 18px;
-  border: 3px solid rgb(67, 248, 241);
 }
-
-.border_corner_left_top {
-  top: -4px;
-  left: -3px;
-  border-right: none;
-  border-bottom: none;
-}
-
-.border_corner_right_top {
-  top: -4px;
-  right: -4px;
-  border-left: none;
-  border-bottom: none;
-}
-
-.border_corner_left_bottom {
-  bottom: -4px;
-  left: -3px;
-  border-right: none;
-  border-top: none;
-}
-
-.border_corner_right_bottom {
-  bottom: -4px;
-  right: -4px;
-  border-left: none;
-  border-top: none;
-}
-
-.part {
-  line-height: 40px;
-  top: -2px;
-  left: -2px;
-  height: 40px;
-  font-style: italic;
-  font-weight: bolder;
-  color: rgb(67, 248, 241);
-}
-
-.satellite {
-  height: 446px;
+.detail {
+  top:0;
+  left:25%;
+  width:75%;
   position: absolute;
-  right: -21px;
-  overflow-x: hidden;
-  overflow-y: scroll;
 }
 
-i {
-  border: solid rgb(67, 248, 241);
-  border-width: 0 3px 3px 0;
-  display: inline-block;
-  padding: 3px;
-}
-.right {
-  transform: rotate(-45deg);
-  -webkit-transform: rotate(-45deg);
+.sortelement {
+  height: 10%;
 }
 
-.down {
-  transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
+.detailelement {
+  height: 10%;
 }
 </style>
