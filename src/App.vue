@@ -24,7 +24,7 @@
 
 <script>
 import * as Cesium from "cesium";
-import { defineComponent, onMounted, reactive,ref} from "@vue/runtime-core";
+import { defineComponent, onMounted, reactive,onUpdated,ref} from "@vue/runtime-core";
 import _ from "lodash";
 import changePos from "./function/changePos";
 import createSat from "./function/createSatellite";
@@ -76,7 +76,13 @@ export default defineComponent({
         // })
       });
 
-      viewer.scene.globe.enableLighting = true; //启用以太阳为光源的地球
+      console.log(localStorage.getItem('enableLighting'))
+      if(localStorage.getItem('enableLighting')=="true"){
+        viewer.scene.globe.enableLighting = true
+      }else if(localStorage.getItem('enableLighting')=="false"){
+        viewer.scene.globe.enableLighting = false
+      }
+
       viewer._cesiumWidget._creditContainer.style.display = "none"; //取消版权信息显示
       viewer.scene.debugShowFramesPerSecond = true;
       viewer.scene.skyBox.show = false;
@@ -469,7 +475,7 @@ export default defineComponent({
       }
     };
 
-    let isshow = ref(false);
+    let isshow = ref(window.viewer?.scene?._globe?.enableLighting??false);
 
     return {
       fmsg,
